@@ -1,0 +1,283 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Mini Project Proposal
+% B.Tech. Information Technology
+% Semester III
+% Usha Mittal Institute of Technology
+% SNDT Women's University
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[a4paper,margin=0.8in]{geometry}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\usepackage{amsmath}
+
+\setstretch{1.08}
+
+\titleformat{\section}
+{\large\bfseries}
+{\thesection.}{0.5em}{}
+
+\setlength{\parindent}{0pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HEADER
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{center}
+
+{\Large \textbf{SNDT Women's University}}
+
+\vspace{2mm}
+
+{\large Usha Mittal Institute of Technology}
+
+\vspace{2mm}
+
+{\Large \textbf{Mini Project Proposal}}
+
+\vspace{1mm}
+
+{\large B.Tech. Information Technology -- Semester III}
+
+\vspace{2mm}
+
+\end{center}
+
+\vspace{4mm}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% STUDENT DETAILS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{1. Group Details}
+
+\begin{tabularx}{\linewidth}{|c|X|c|X|}
+\hline
+No. & Student Name & Roll No. & Email ID \\
+\hline
+1 & Aditi Nagdeve & 38 & aditinagdeve342@gmail.com \\
+\hline
+2 & Riya Singh & 63 & riya1singh453@gmail.com \\
+\hline
+\end{tabularx}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{2. Project Title}
+
+\textbf{Title: Academic Workload Forecasting and Deadline Collision Detection System for University Students Using Calendar Analytics and Algorithmic Capacity Modeling}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{3. Problem Statement}
+
+Undergraduate students manage multiple concurrent commitments, including lectures, lab practicals, journal submissions, assignments, and examinations. Existing digital planners merely store due dates and issue notifications; they fail to account for how fixed instructional hours, holidays, and calendar disruptions diminish the actual preparation time available prior to those deadlines.
+
+Recent research highlights that academic stress and missed submissions are primarily driven by temporal deadline clustering rather than total credit hours. Consequently, students often realize that commitments have accumulated only when deadlines collide. There is a need for a system that integrates student timetables with institutional calendars to dynamically assess preparation capacity, detect deadline collisions in advance, and deliver proactive warnings.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{4. Problem Validation}
+
+The problem will be validated using the following methods:
+
+\[\text{Field Visit} \qquad \checkmark\; \text{Survey} \qquad \checkmark\; \text{Interview}\]
+
+\[\checkmark\; \text{Observation} \qquad \checkmark\; \text{Literature Review} \qquad \checkmark\; \text{Government Report}\]
+
+Student surveys, interviews, and direct observations will capture empirical data on submission clustering and prep-time loss. Complementary literature reviews and academic reports will be evaluated to analyze the relationship between assignment timing, course load distribution, and submission bottlenecks.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{5. Project Objectives}
+
+\begin{enumerate}
+
+\item Review existing research on learning analytics, student workload peaks, and academic scheduling models.
+
+\vspace{5mm}
+
+\item Build a centralized ingestion module to parse student timetables, academic calendars, continuous assessments, and exam schedules into a unified schedule.
+
+\vspace{5mm}
+
+\item Formulate an algorithm to calculate effective preparation capacity by deducting mandatory instructional hours, weekends, and holidays.
+
+\vspace{5mm}
+
+\item Implement a collision-detection engine that forecasts high-friction periods where task demand exceeds available preparation capacity.
+
+\vspace{5mm}
+
+\item Provide explainable, risk-tiered warnings (Low, Moderate, High) to guide student study planning before deadlines become critical.
+
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{6. Proposed Methodology}
+
+The proposed system follows the workflow:
+
+\begin{enumerate}
+
+\item \textbf{Academic Information Input:}
+The student inputs or uploads recurring lecture/lab timetables, examination dates, assignment due dates, and semester calendars.
+
+\vspace{3mm}
+
+\item \textbf{Data Processing and Event Normalization:}
+The system extracts and categorizes inputs into structured events (lectures, labs, exams, submissions), attaching duration and estimated effort parameters.
+
+\vspace{3mm}
+
+\item \textbf{Calendar Integration \& Capacity Modeling:}
+Academic commitments are synchronized with institutional calendars to compute net preparation capacity after accounting for scheduled contact hours and non-instructional days.
+
+\vspace{3mm}
+
+\item \textbf{Collision Detection \& Risk Forecasting:}
+A detection algorithm evaluates upcoming time windows for deadline clustering, comparing workload demand against net capacity to assign risk levels.
+
+\vspace{3mm}
+
+\item \textbf{Visualization \& Early Alerts:}
+A centralized dashboard displays the workload distribution curve, visual calendar indicators, and itemized warnings identifying specific contributing tasks.
+
+\end{enumerate}
+
+
+\begin{center}
+
+\fbox{
+\parbox{0.85\linewidth}{
+\centering
+
+Academic Timetable + Academic Events
+
+$\downarrow$
+
+Data Processing and Calendar Integration
+
+$\downarrow$
+
+Workload and Available Time Analysis
+
+$\downarrow$
+
+Deadline Collision Detection
+
+$\downarrow$
+
+Workload Forecasting
+
+$\downarrow$
+
+Early Warning
+
+$\downarrow$
+
+Student Dashboard / Calendar
+
+}}
+
+\end{center}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{7. Expected Deliverables}
+
+\begin{itemize}
+
+\item A functional web-based prototype implementing timetable ingestion, capacity calculation, and collision forecasting.
+
+\item An interactive calendar and dashboard displaying scheduled milestones, workload curves, and risk alerts.
+
+\item A curated benchmark dataset of academic timetables, constraints, and student workload scenarios.
+
+\item Complete project source code and comprehensive technical documentation detailing system architecture, algorithms, and validation results.
+
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{8. Expected Outcomes and Social Impact}
+
+\begin{itemize}
+
+\item \textbf{Expected Technical Outcome:}
+A working prototype that models preparation capacity from multi-source academic schedules, detects submission collisions, and forecasts workload stress points.
+
+\item \textbf{Beneficiaries:}
+Higher education students navigating simultaneous laboratory practicals, internal evaluations, and continuous assessments.
+
+\item \textbf{Societal Impact:}
+Reduces academic burnout and last-minute cramming by encouraging structured, advance preparation across the semester.
+
+\item \textbf{Possible Future Enhancements:}
+Automated schedule parsing from PDF notices, LMS integration (e.g., Moodle/Canvas), machine-learning-based effort estimation, and personalized daily study plan generation.
+
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{9. References}
+
+\begin{enumerate}
+
+\item P. V. Sargent, I. Hilliger, and J. A. Baier,
+``Beyond Time on Task: A Novel Analytical Framework for Assessing Student Workload and Its Relationship with Learning,''
+\textit{Journal of Learning Analytics}, vol. 13, no. 1, pp. 110--129, 2026.
+Available:
+\url{https://doi.org/10.18608/jla.2026.8725}
+
+\item C. B. Mallari, J. L. San Juan, and R. Li,
+``The University Coursework Timetabling Problem: An Optimization Approach to Synchronizing Course Calendars,''
+\textit{Computers \& Industrial Engineering}, vol. 184, 109561, 2023.
+Available:
+\url{https://doi.org/10.1016/j.cie.2023.109561}
+
+\item Z. A. Pardos, C. Borchers, and R. Yu,
+``Credit Hours is Not Enough: Explaining Undergraduate Perceptions of Course Workload Using LMS Records,''
+\textit{The Internet and Higher Education}, vol. 56, 100882, 2023.
+Available:
+\url{https://doi.org/10.1016/j.iheduc.2022.100882}
+
+\item S. King and A. Loddick,
+``Understanding the Reasons Why Students Fail to Submit Assignments,''
+\textit{Discover Education}, vol. 5, article 122, 2026.
+Available:
+\url{https://doi.org/10.1007/s44217-026-01186-6}
+
+\item Ministry of Education, Government of India,
+``National Education Policy and Digital Initiatives in Higher Education,''
+\textit{Department of Higher Education Portal}, 2024.
+Available:
+\url{https://www.education.gov.in}
+
+\end{enumerate}
+
+
+\end{document}
