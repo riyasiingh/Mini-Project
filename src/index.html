@@ -7,19 +7,19 @@
 
         <!-- Tailwind CSS CDN -->
         <script src="https://cdn.tailwindcss.com"></script>
-        <!-- Chart.js -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <!-- Lucide Icons -->
         <script src="https://unpkg.com/lucide@latest"></script>
         <!-- Tone.js for Pomodoro Chimes -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
-        <!-- Firebase SDKs (Cloud Auth & Firestore Backend) -->
+        <!-- PDF.js for Multi-page PDF Rendering -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+        <!-- Firebase SDKs -->
         <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
 
-        <!-- Custom Stylesheet -->
         <link rel="stylesheet" href="style.css">
 
         <script>
@@ -45,7 +45,7 @@
     <body
         class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col md:flex-row overflow-x-hidden selection:bg-indigo-500 selection:text-white">
 
-        <!-- ================= AUTH MODAL (LOGIN / REGISTER) ================= -->
+        <!-- ================= AUTH MODAL ================= -->
         <div id="authModal"
             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
             <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md p-6 sm:p-8 space-y-6">
@@ -56,11 +56,10 @@
                     </div>
                     <div>
                         <h2 class="text-xl font-bold text-slate-900" id="authTitle">Sign In to SynapseLoad</h2>
-                        <p class="text-xs text-slate-500">Cloud-Synced Academic Forecasting Engine</p>
+                        <p class="text-xs text-slate-500">Academic Workload Forecasting Engine</p>
                     </div>
                 </div>
 
-                <!-- Auth Mode Switcher -->
                 <div class="flex p-1 bg-slate-100 rounded-xl text-xs font-semibold text-slate-600">
                     <button id="authTabSignIn" onclick="setAuthMode('signin')"
                         class="flex-1 py-2 rounded-lg bg-white shadow-sm text-indigo-600">Sign In</button>
@@ -71,26 +70,26 @@
                 <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4 text-xs">
                     <div id="authNameField" class="hidden space-y-1">
                         <label class="font-bold text-slate-700">Full Name</label>
-                        <input type="text" id="authNameInput" placeholder="Jane Doe"
+                        <input type="text" id="authNameInput" placeholder="Student Name"
                             class="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500">
                     </div>
 
                     <div id="authMetaFields" class="hidden grid grid-cols-2 gap-3">
                         <div class="space-y-1">
                             <label class="font-bold text-slate-700">Branch / Major</label>
-                            <input type="text" id="authBranchInput" placeholder="Computer Engg"
+                            <input type="text" id="authBranchInput" placeholder="Information Tech"
                                 class="w-full px-3 py-2 rounded-xl border border-slate-300">
                         </div>
                         <div class="space-y-1">
                             <label class="font-bold text-slate-700">Semester</label>
-                            <input type="number" id="authSemesterInput" placeholder="4" min="1" max="12"
+                            <input type="number" id="authSemesterInput" placeholder="3" min="1" max="12"
                                 class="w-full px-3 py-2 rounded-xl border border-slate-300">
                         </div>
                     </div>
 
                     <div class="space-y-1">
                         <label class="font-bold text-slate-700">Email Address</label>
-                        <input type="email" id="authEmailInput" required placeholder="student@university.edu"
+                        <input type="email" id="authEmailInput" required placeholder="student@campus.edu"
                             class="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500">
                     </div>
 
@@ -128,18 +127,15 @@
                 </div>
                 <span class="font-bold tracking-tight text-slate-900 text-lg">SynapseLoad</span>
             </div>
-            <div class="flex items-center gap-2">
-                <button onclick="toggleMobileNav()" class="p-2 rounded-lg text-slate-600 hover:bg-slate-100"
-                    aria-label="Toggle menu">
-                    <i data-lucide="menu" class="w-6 h-6"></i>
-                </button>
-            </div>
+            <button onclick="toggleMobileNav()" class="p-2 rounded-lg text-slate-600 hover:bg-slate-100"
+                aria-label="Toggle menu">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
         </header>
 
         <!-- Sidebar Navigation -->
         <aside id="sidebarNav"
             class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col md:static md:h-screen">
-            <!-- Brand -->
             <div class="p-5 border-b border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div
@@ -157,7 +153,6 @@
                 </button>
             </div>
 
-            <!-- Live Status Quick Pill -->
             <div class="px-4 py-3 mx-4 my-3 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs">
                 <div class="flex items-center justify-between text-slate-300 font-semibold mb-1">
                     <span>Semester Status</span>
@@ -194,7 +189,7 @@
                 <button onclick="switchView('planner')" id="nav-planner"
                     class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-800 text-slate-300">
                     <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
-                    <span>AI Study Planner</span>
+                    <span>Study Planner</span>
                 </button>
 
                 <button onclick="switchView('focus')" id="nav-focus"
@@ -210,39 +205,31 @@
                 </button>
 
                 <div class="pt-3 pb-1 px-3">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Smart Data
-                        Ingestion</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Smart Ingestion</span>
                 </div>
 
+                <button onclick="switchView('profile')" id="nav-profile"
+                    class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-800 text-slate-300">
+                    <i data-lucide="user-cog" class="w-4 h-4"></i><span>Profile & Semester</span>
+                </button>
                 <button onclick="switchView('importer')" id="nav-importer"
                     class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-800 text-slate-300 border border-slate-700/50 bg-slate-800/40">
                     <i data-lucide="file-up" class="w-4 h-4 text-emerald-400"></i>
-                    <span>Upload & Verify Timetable</span>
+                    <span>Upload & Verify Schedule</span>
                 </button>
 
-                <!-- Admin Tab (Only visible to Admin role) -->
                 <button onclick="switchView('admin')" id="nav-admin"
                     class="nav-item hidden w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-amber-300 hover:bg-slate-800 border border-amber-500/30 bg-amber-500/10">
                     <i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
-                    <span>Admin User Directory</span>
+                    <span>Admin Directory</span>
                 </button>
             </nav>
 
-            <!-- Saturday Config & User Footer -->
-            <div class="p-4 border-t border-slate-800 text-xs text-slate-400">
-                <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/50 mb-3">
-                    <div class="flex flex-col">
-                        <span class="font-semibold text-slate-200 text-xs">Holiday on Saturday?</span>
-                        <span class="text-[10px] text-slate-400" id="satStatusLabel">Alternate Off</span>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="satHolidayToggle" onchange="toggleSaturdayHoliday(this.checked)"
-                            checked class="sr-only peer">
-                        <div
-                            class="w-8 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600">
-                        </div>
-                    </label>
-                </div>
+            <div class="p-4 border-t border-slate-800 text-xs text-slate-400 space-y-3">
+                <button onclick="clearAllUserData()"
+                    class="w-full text-center py-1.5 bg-red-950/60 hover:bg-red-900 border border-red-800/60 rounded-lg text-red-200 text-[11px] font-bold transition flex items-center justify-center gap-1.5">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Wipe All Stored Data
+                </button>
 
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2.5 overflow-hidden">
@@ -251,12 +238,16 @@
                             ST
                         </div>
                         <div class="overflow-hidden">
-                            <div class="font-medium text-slate-200 truncate" id="userNameLabel">Guest Student</div>
-                            <div class="text-[10px] text-slate-400 truncate" id="userRoleSubtext">Local Mode</div>
+                            <div class="font-medium text-slate-200 truncate" id="userNameLabel">Set up profile</div>
+                            <button onclick="toggleUserRole()" id="userRoleSubtext"
+                                class="text-[10px] text-indigo-400 font-semibold hover:underline cursor-pointer block truncate"
+                                title="Toggle role">
+                                STUDENT
+                            </button>
                         </div>
                     </div>
                     <button onclick="handleSignOutOrOpenAuth()" class="p-1.5 hover:text-white text-slate-400"
-                        title="Account / Sign Out">
+                        title="Sign Out">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -265,7 +256,7 @@
 
         <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto custom-scrollbar">
 
-            <!-- Top notification banner for active high-risk collision -->
+            <!-- Active Collision Banner -->
             <div id="collisionBanner"
                 class="hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 text-white px-4 py-2.5 text-xs sm:text-sm font-medium flex items-center justify-between shadow-md">
                 <div class="flex items-center gap-2 overflow-hidden">
@@ -278,40 +269,33 @@
                         Collision Risk</span>
                     <span class="truncate" id="collisionBannerText">Academic overload detected!</span>
                 </div>
-                <button onclick="switchView('collision')"
+                <button onclick="triggerAiScheduleRebalance()"
                     class="shrink-0 ml-3 underline hover:text-white/80 font-semibold cursor-pointer text-xs">
-                    Fix with AI Leveling &rarr;
+                    Rebalance Load &rarr;
                 </button>
             </div>
 
-            <!-- View Container -->
             <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
 
                 <!-- ================= 1. DASHBOARD VIEW ================= -->
                 <section id="view-dashboard" class="view-panel space-y-6">
-                    <!-- Header -->
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Academic Pulse & Forecast
+                            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Academic Pulse & Overview
                             </h2>
-                            <p class="text-sm text-slate-500">Intelligent predictive workload tracking for college
-                                semesters</p>
+                            <p class="text-sm text-slate-500">Live workload status based on your timetable and deadlines
+                            </p>
                         </div>
                         <div class="flex items-center gap-2.5">
-                            <button onclick="loadSampleData()"
-                                class="inline-flex items-center gap-2 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs sm:text-sm font-semibold rounded-xl border border-amber-300 transition-all">
-                                <i data-lucide="database" class="w-4 h-4"></i>
-                                <span>Load Sample (JDSAAR, OOP, DM)</span>
-                            </button>
                             <button onclick="triggerAiScheduleRebalance()"
                                 class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition-all">
                                 <i data-lucide="sparkles" class="w-4 h-4"></i>
-                                <span>Rebalance Study Load</span>
+                                <span>Rebalance Load</span>
                             </button>
                             <button onclick="switchView('importer')"
                                 class="inline-flex items-center gap-2 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 shadow-sm transition-all">
                                 <i data-lucide="upload" class="w-4 h-4 text-slate-500"></i>
-                                <span>Ingest Timetable</span>
+                                <span>Ingest Schedule</span>
                             </button>
                         </div>
                     </div>
@@ -324,7 +308,7 @@
                                 <i data-lucide="zap" class="w-6 h-6"></i>
                             </div>
                             <div>
-                                <div class="text-xs text-slate-500 font-medium">Impending Collisions</div>
+                                <div class="text-xs text-slate-500 font-medium">Active Collisions</div>
                                 <div class="text-xl font-bold text-slate-900 mt-0.5" id="metricCollisionCount">0
                                     Detected</div>
                                 <span class="text-[11px] text-slate-400" id="metricCollisionSubtext">Schedule
@@ -352,9 +336,8 @@
                                 <i data-lucide="flame" class="w-6 h-6"></i>
                             </div>
                             <div>
-                                <div class="text-xs text-slate-500 font-medium">Week Peak Intensity</div>
-                                <div class="text-xl font-bold text-slate-900 mt-0.5" id="metricPeakLoad">0.0 hrs / day
-                                </div>
+                                <div class="text-xs text-slate-500 font-medium">Week Status</div>
+                                <div class="text-xl font-bold text-slate-900 mt-0.5" id="metricPeakLoad">Balanced</div>
                                 <span class="text-[11px] text-emerald-600 font-semibold" id="metricPeakPercent">Normal
                                     load</span>
                             </div>
@@ -366,7 +349,7 @@
                                 <i data-lucide="award" class="w-6 h-6"></i>
                             </div>
                             <div>
-                                <div class="text-xs text-slate-500 font-medium">Target / Projected GPA</div>
+                                <div class="text-xs text-slate-500 font-medium">Projected GPA</div>
                                 <div class="text-xl font-bold text-slate-900 mt-0.5" id="metricGpa">-- <span
                                         class="text-xs text-slate-400 font-normal">/ 10</span></div>
                                 <span class="text-[11px] text-slate-400 font-semibold" id="metricCoursesCount">0 courses
@@ -375,54 +358,42 @@
                         </div>
                     </div>
 
-                    <!-- Middle Row: Workload Forecast Curve + Today's Schedule -->
+                    <!-- Clean Weekly Horizon -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div
-                            class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                            <div class="flex items-center justify-between mb-4">
+                            class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+                            <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="font-bold text-slate-900 text-base">14-Day Academic Workload Horizon</h3>
-                                    <p class="text-xs text-slate-500">Dynamic projection factoring class time, lab
-                                        assignments, study buffers & festivals</p>
-                                </div>
-                                <div class="flex items-center gap-3 text-xs">
-                                    <span class="flex items-center gap-1.5"><span
-                                            class="w-3 h-3 rounded-full bg-indigo-500"></span> Current Load</span>
-                                    <span class="flex items-center gap-1.5"><span
-                                            class="w-3 h-3 rounded-full bg-emerald-400"></span> AI Safe Level</span>
-                                </div>
-                            </div>
-
-                            <!-- Canvas Container -->
-                            <div class="relative h-64 w-full">
-                                <canvas id="workloadForecastChart"></canvas>
-                            </div>
-
-                            <div
-                                class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                                    <span>Threshold: &gt;9.5 hrs/day triggers collision alarm</span>
+                                    <h3 class="font-bold text-slate-900 text-base">Weekly Schedule Pace</h3>
+                                    <p class="text-xs text-slate-500">Day-by-day workload density and upcoming academic
+                                        checkpoints</p>
                                 </div>
                                 <button onclick="switchView('calendar')"
-                                    class="text-indigo-600 font-semibold hover:underline">View Full Interactive Calendar
-                                    &rarr;</button>
+                                    class="text-xs text-indigo-600 font-bold hover:underline">
+                                    Open Full Calendar &rarr;
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3" id="weeklyPaceGrid"></div>
+
+                            <div
+                                class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                                <span>🟢 Light (0-3h) • 🟡 Balanced (3-6h) • 🔴 Heavy/Exam (&gt;6h)</span>
+                                <span class="font-semibold text-slate-600">Dynamic Capacity Engine</span>
                             </div>
                         </div>
 
                         <!-- Today's Schedule -->
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
                             <div class="flex items-center justify-between mb-3">
-                                <h3 class="font-bold text-slate-900 text-base">Today's Class Grid</h3>
+                                <h3 class="font-bold text-slate-900 text-base">Today's Class Schedule</h3>
                                 <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600"
                                     id="currentDayBadge">Wednesday</span>
                             </div>
-                            <p class="text-xs text-slate-500 mb-4">Parsed from your uploaded semester timetable</p>
+                            <p class="text-xs text-slate-500 mb-4">Extracted from your confirmed timetable</p>
 
-                            <div class="space-y-2.5 flex-1 overflow-y-auto max-h-72 custom-scrollbar pr-1"
-                                id="todaysClassesList">
-                                <!-- Empty state injected by JS -->
-                            </div>
+                            <div class="space-y-2.5 flex-1 overflow-y-auto max-h-60 custom-scrollbar pr-1"
+                                id="todaysClassesList"></div>
 
                             <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                                 <span class="text-slate-500" id="totalClassHoursLabel">Total in-class: <strong>0.0
@@ -435,7 +406,7 @@
                         </div>
                     </div>
 
-                    <!-- Bottom Row: Dynamic AI To-Do Protection Plan + Active Collision Alerts -->
+                    <!-- Tasks & Deadlines -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                             <div class="flex items-center justify-between mb-3">
@@ -444,8 +415,7 @@
                                         <i data-lucide="sparkles" class="w-4 h-4 text-indigo-600"></i>
                                         Anticipatory Study Protection Plan
                                     </h3>
-                                    <p class="text-xs text-slate-500">Autonomous shifts to keep deadlines from piling up
-                                    </p>
+                                    <p class="text-xs text-slate-500">Scheduled study blocks</p>
                                 </div>
                                 <button onclick="addNewTaskPrompt()"
                                     class="text-xs font-semibold text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200">
@@ -453,9 +423,7 @@
                                 </button>
                             </div>
 
-                            <div class="space-y-2" id="smartTodoList">
-                                <!-- Dynamically populated -->
-                            </div>
+                            <div class="space-y-2" id="smartTodoList"></div>
                         </div>
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
@@ -470,9 +438,7 @@
                                 </button>
                             </div>
 
-                            <div class="space-y-3" id="deadlinesList">
-                                <!-- Dynamically populated -->
-                            </div>
+                            <div class="space-y-3" id="deadlinesList"></div>
                         </div>
                     </div>
                 </section>
@@ -483,7 +449,8 @@
                         <div>
                             <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Calendar Workload
                                 Intensity</h2>
-                            <p class="text-sm text-slate-500">Lectures, Labs, Holidays, Exams & Busy Heat levels</p>
+                            <p class="text-sm text-slate-500">Lectures, Labs, Holidays, and Deadline Stress Indicators
+                            </p>
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="changeCalendarMonth(-1)"
@@ -492,8 +459,7 @@
                                 <i data-lucide="chevron-left" class="w-4 h-4"></i>
                             </button>
                             <span id="calendarCurrentMonthLabel"
-                                class="text-sm font-bold text-slate-800 px-3 py-1 bg-white rounded-lg border border-slate-200">October
-                                2026</span>
+                                class="text-sm font-bold text-slate-800 px-3 py-1 bg-white rounded-lg border border-slate-200"></span>
                             <button onclick="changeCalendarMonth(1)"
                                 class="p-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600"
                                 aria-label="Next Month">
@@ -508,19 +474,19 @@
                         <div class="flex flex-wrap items-center gap-4">
                             <span class="flex items-center gap-1.5"><span
                                     class="w-3.5 h-3.5 rounded-md bg-emerald-100 border border-emerald-300"></span>
-                                Light (&lt;4h)</span>
+                                Light</span>
                             <span class="flex items-center gap-1.5"><span
                                     class="w-3.5 h-3.5 rounded-md bg-amber-100 border border-amber-300"></span>
-                                Moderately Busy (4-7h)</span>
+                                Moderate</span>
                             <span class="flex items-center gap-1.5"><span
-                                    class="w-3.5 h-3.5 rounded-md bg-orange-100 border border-orange-300"></span> Heavy
-                                Load (7-10h)</span>
+                                    class="w-3.5 h-3.5 rounded-md bg-orange-100 border border-orange-300"></span>
+                                Heavy</span>
                             <span class="flex items-center gap-1.5"><span
                                     class="w-3.5 h-3.5 rounded-md bg-red-100 border border-red-400"></span> Collision
-                                Hazard (&gt;10h / Exams)</span>
+                                Hazard</span>
                             <span class="flex items-center gap-1.5"><span
-                                    class="w-3.5 h-3.5 rounded-md bg-blue-100 border border-blue-300"></span> Holiday /
-                                Festival</span>
+                                    class="w-3.5 h-3.5 rounded-md bg-blue-100 border border-blue-300"></span>
+                                Holiday</span>
                         </div>
                     </div>
 
@@ -533,14 +499,11 @@
                             <div>WED</div>
                             <div>THU</div>
                             <div>FRI</div>
-                            <div id="satColHeader">SAT <span class="text-[10px] text-amber-600 font-normal">(Alt
-                                    Off)</span></div>
+                            <div id="satColHeader">SAT</div>
                         </div>
 
                         <div id="calendarGrid"
-                            class="grid grid-cols-7 divide-x divide-y divide-slate-100 min-h-[580px]">
-                            <!-- Injected by JS -->
-                        </div>
+                            class="grid grid-cols-7 divide-x divide-y divide-slate-100 min-h-[580px]"></div>
                     </div>
 
                     <div id="dayDetailCard" class="hidden bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
@@ -563,70 +526,36 @@
                     <div>
                         <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Predictive Collision Detection
                             Engine</h2>
-                        <p class="text-sm text-slate-500">Detects deadline clusters, exam pile-ups, and holiday rebound
-                            traps before they cause academic burnout.</p>
+                        <p class="text-sm text-slate-500">Flags intervals where assignments cluster around restricted
+                            preparation windows</p>
                     </div>
 
                     <div id="collisionBannerCard"
                         class="bg-slate-100 rounded-2xl border border-slate-300 p-8 text-center text-slate-500 space-y-3">
                         <i data-lucide="shield-check" class="w-12 h-12 mx-auto text-emerald-500"></i>
                         <h3 class="text-lg font-bold text-slate-800">No Collisions Found</h3>
-                        <p class="text-xs max-w-md mx-auto">Your schedule currently has balanced workload distribution.
-                            When you upload exam schedules or add high-intensity assignments, collision forecasts will
-                            appear here.</p>
-                    </div>
-
-                    <div class="bg-slate-900 text-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                        <div class="flex items-center gap-2 text-indigo-400">
-                            <i data-lucide="cpu" class="w-5 h-5"></i>
-                            <h3 class="font-bold text-white text-base">How SynapseLoad Predicts Collisions Before Other
-                                Tools</h3>
-                        </div>
-                        <p class="text-xs text-slate-400 leading-relaxed">
-                            Existing apps only store events on a timeline without computing <em>energy draw</em>.
-                            SynapseLoad combines 4 distinct data layers to compute your daily Workload Stress Index
-                            ($WSI$):
-                        </p>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-                            <div class="p-3 bg-slate-800 rounded-xl border border-slate-700">
-                                <span class="text-indigo-400 font-bold block mb-1">1. Fixed Hours</span>
-                                Regular Lectures (1.0x) + Laboratory Practicals (1.5x cognitive load).
-                            </div>
-                            <div class="p-3 bg-slate-800 rounded-xl border border-slate-700">
-                                <span class="text-indigo-400 font-bold block mb-1">2. Credit Multiplier</span>
-                                4-credit courses produce higher assignment complexity than 2-credit labs.
-                            </div>
-                            <div class="p-3 bg-slate-800 rounded-xl border border-slate-700">
-                                <span class="text-indigo-400 font-bold block mb-1">3. Holiday Distortion</span>
-                                Holidays immediately preceding exam days suppress preparation runway by 65%.
-                            </div>
-                            <div class="p-3 bg-slate-800 rounded-xl border border-slate-700">
-                                <span class="text-indigo-400 font-bold block mb-1">4. Exam Proximity</span>
-                                Exponential strain surge within 72 hours of Midterm/Final tests.
-                            </div>
-                        </div>
+                        <p class="text-xs max-w-md mx-auto">Your academic schedule currently has balanced workload
+                            distribution.</p>
                     </div>
                 </section>
 
-                <!-- ================= 4. AI STUDY PLANNER ================= -->
+                <!-- ================= 4. STUDY PLANNER ================= -->
                 <section id="view-planner" class="view-panel hidden space-y-6">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">AI Adaptive Study & Task
-                                Planner</h2>
-                            <p class="text-sm text-slate-500">Autonomous leveling that distributes study chunks across
-                                safe days so you never cram.</p>
+                            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Adaptive Study Planner
+                            </h2>
+                            <p class="text-sm text-slate-500">Balances preparation blocks before exams and submissions
+                            </p>
                         </div>
                         <button onclick="triggerAiScheduleRebalance()"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm">
                             <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                            <span>Re-Generate Daily Plan</span>
+                            <span>Re-Generate Plan</span>
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="studyPlannerDaysGrid">
-                        <!-- Injected by JS -->
-                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="studyPlannerDaysGrid"></div>
                 </section>
 
                 <!-- ================= 5. FOCUS POMODORO ================= -->
@@ -634,8 +563,8 @@
                     <div class="max-w-2xl mx-auto text-center space-y-2">
                         <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Course-Integrated Focus
                             Pomodoro</h2>
-                        <p class="text-sm text-slate-500">Study sessions automatically log progress towards preventing
-                            targeted assignment collisions.</p>
+                        <p class="text-sm text-slate-500">Study sessions directly connected to your enrolled curriculum
+                        </p>
                     </div>
 
                     <div
@@ -681,7 +610,7 @@
                             class="pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="volume-2" class="w-4 h-4 text-slate-400"></i>
-                                <span>Synthetic Tone Chime enabled</span>
+                                <span>Chime Enabled</span>
                             </div>
                             <div class="font-medium text-slate-700">
                                 Completed Today: <strong id="completedSessionsCount" class="text-indigo-600">0</strong>
@@ -697,7 +626,7 @@
                         <div>
                             <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Enrolled Courses & GPA
                                 Projector</h2>
-                            <p class="text-sm text-slate-500">Course credits weight your collision severity.</p>
+                            <p class="text-sm text-slate-500">Course credits weight your collision severity</p>
                         </div>
                         <button onclick="addNewCoursePrompt()"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm">
@@ -722,18 +651,13 @@
                                 <span class="text-slate-300">Enrolled Courses:</span>
                                 <span class="font-bold" id="gpaEnrolledCount">0</span>
                             </div>
-                            <div class="flex justify-between gap-6">
-                                <span class="text-slate-300">Target Grade Cutoff:</span>
-                                <span class="font-bold text-emerald-300">&ge; 8.50 (Honors)</span>
-                            </div>
                         </div>
                     </div>
 
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                         <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                            <h3 class="font-bold text-slate-800 text-sm">Active Curriculum Courses & Weights</h3>
-                            <span class="text-xs text-slate-500">Edit marks or credits inline to recalculate
-                                workload</span>
+                            <h3 class="font-bold text-slate-800 text-sm">Active Curriculum Courses</h3>
+                            <span class="text-xs text-slate-500">Delete or update marks inline</span>
                         </div>
 
                         <div class="overflow-x-auto">
@@ -751,9 +675,7 @@
                                         <th class="py-3 px-4 text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="coursesTableBody" class="divide-y divide-slate-100 font-medium">
-                                    <!-- Dynamically populated -->
-                                </tbody>
+                                <tbody id="coursesTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
                             </table>
                         </div>
                     </div>
@@ -764,77 +686,66 @@
                     <div>
                         <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Smart Data Ingestion &
                             Verification Hub</h2>
-                        <p class="text-sm text-slate-500">Upload your timetable/calendar, then freely <strong>edit and
-                                correct</strong> the parsed data before saving.</p>
+                        <p class="text-sm text-slate-500">Upload your timetable image or PDF. Multimodal AI directly
+                            reads courses, contact hours, exams, and institutional holidays.</p>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 bg-white rounded-2xl border-2 border-dashed border-indigo-200 hover:border-indigo-400 p-8 text-center transition-all flex flex-col items-center justify-center group cursor-pointer"
                             onclick="document.getElementById('fileUploadInput').click()">
                             <input type="file" id="fileUploadInput" class="hidden"
-                                accept=".pdf,.png,.jpg,.jpeg,.csv,.xlsx,.txt" onchange="handleFileUpload(event)">
+                                accept=".pdf,.png,.jpg,.jpeg,.csv,.xlsx,.txt,.json" onchange="handleFileUpload(event)">
                             <div
                                 class="w-14 h-14 rounded-2xl bg-indigo-50 group-hover:bg-indigo-100 text-indigo-600 flex items-center justify-center mb-4 transition-colors">
                                 <i data-lucide="upload-cloud" class="w-7 h-7"></i>
                             </div>
                             <h3 class="font-bold text-slate-800 text-base mb-1">Upload Timetable, Academic Calendar, or
                                 Exam Schedule</h3>
-                            <p class="text-xs text-slate-500 max-w-md mb-4">Supports University PDF timetables, phone
-                                photos/screenshots, or CSV exports. Our parser extracts courses, credits, and lab
-                                timings.</p>
-                            <div class="flex flex-wrap gap-2 justify-center">
-                                <span class="px-3 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-semibold">PDF
-                                    Timetable</span>
-                                <span
-                                    class="px-3 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-semibold">Academic
-                                    Calendar .jpg</span>
-                                <span
-                                    class="px-3 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-semibold">Mark
-                                    Sheets</span>
-                            </div>
+                            <p class="text-xs text-slate-500 max-w-md mb-2">Multimodal extraction automatically
+                                identifies courses, lecture blocks, exams, and holidays.</p>
+                            <span id="ocrStatusBadge"
+                                class="hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 animate-pulse">
+                                <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Processing with
+                                Multimodal Vision Engine...
+                            </span>
                             <button type="button"
-                                class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700">
-                                Browse Files or Demo Parse
+                                class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700">
+                                Browse Image or PDF
                             </button>
                         </div>
 
                         <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
                             <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
                                 <i data-lucide="sliders" class="w-4 h-4 text-indigo-600"></i>
-                                Calendar Parameters
+                                Configuration Parameters
                             </h3>
 
                             <div class="space-y-3 text-xs">
                                 <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
                                     <label class="font-bold text-slate-800 block mb-1">Holiday on Saturday?</label>
-                                    <p class="text-slate-500 mb-2">Configure whether Saturdays have lectures or count as
-                                        study buffers.</p>
                                     <select id="satSelectRule" onchange="updateSaturdayRule(this.value)"
                                         class="w-full bg-white border border-slate-300 rounded-lg p-2 font-medium text-slate-700">
-                                        <option value="alternate">Alternate Saturdays Off (Standard Engineering)
-                                        </option>
-                                        <option value="all_off">All Saturdays Off (5-Day Week)</option>
-                                        <option value="all_working">All Saturdays Working (Full 6-Day)</option>
+                                        <option value="alternate">Alternate Saturdays Off</option>
+                                        <option value="all_off">All Saturdays Off</option>
+                                        <option value="all_working">All Saturdays Working</option>
                                     </select>
                                 </div>
 
-                                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                                    <label class="font-bold text-slate-800 block mb-1">Festival / Holiday
-                                        Calendar</label>
-                                    <p class="text-slate-500 mb-2">Sync with standard university holidays (Diwali,
-                                        Dussehra, Semester Breaks).</p>
-                                    <span
-                                        class="inline-flex items-center gap-1.5 text-emerald-700 font-semibold text-[11px]">
-                                        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Academic 2026/27 Festival
-                                        Pack Synced
-                                    </span>
+                                <!-- Development-only AI key. For public deployment, move Gemini calls to a backend. -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                                    <label class="font-bold text-slate-800 block">AI Vision API Key (Optional)</label>
+                                    <p class="text-slate-400 text-[11px]">Development only: do not expose a production
+                                        API key in client-side code.</p>
+                                    <input type="password" id="geminiApiKeyInput"
+                                        onchange="saveGeminiApiKey(this.value)" placeholder="AIzaSy..."
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono text-[11px] text-slate-800">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Wireframe Review Box with INLINE EDITING of parsed data -->
-                    <div class="bg-white rounded-2xl border-2 border-indigo-100 shadow-sm p-6 space-y-4">
+                    <!-- Verification Review Box -->
+                    <div class="bg-white rounded-2xl border-2 border-indigo-100 shadow-sm p-6 space-y-5">
                         <div
                             class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                             <div>
@@ -842,15 +753,19 @@
                                     <span
                                         class="px-2 py-0.5 rounded text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">Step
                                         2: Verification Review</span>
-                                    <h3 class="font-bold text-slate-900 text-base">Check if everything is correct // AI
-                                        can make mistakes</h3>
+                                    <h3 class="font-bold text-slate-900 text-base">Verify Extracted Data</h3>
                                 </div>
                                 <p class="text-xs text-amber-700 font-medium mt-0.5">
-                                    Review and directly edit the parsed courses, credits, and lecture distributions
-                                    before committing them to the forecast engine.
+                                    Review the automatically extracted courses and schedule events below. You can edit
+                                    any field before saving to the cloud.
                                 </p>
                             </div>
                             <div class="flex items-center gap-2">
+                                <button onclick="loadActiveCoursesIntoDraft()"
+                                    class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                                    title="Pull saved courses back to edit">
+                                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Pull Saved Courses
+                                </button>
                                 <button onclick="addReviewItemRow()"
                                     class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
                                     + Add Course Row
@@ -862,14 +777,78 @@
                             </div>
                         </div>
 
-                        <!-- Parsed Editable Courses Grid -->
+                        <!-- 1. Extracted Courses -->
                         <div class="space-y-3">
-                            <h4 class="text-xs font-bold uppercase text-slate-400 tracking-wider">Editable Parsed
-                                Courses & Weights</h4>
-                            <div id="parsedCoursesEditableList" class="space-y-2">
-                                <!-- Dynamically populated with editable inputs -->
-                            </div>
+                            <h4 class="text-xs font-bold uppercase text-slate-400 tracking-wider">1. Extracted
+                                Curriculum Courses</h4>
+                            <div id="parsedCoursesEditableList" class="space-y-2"></div>
                         </div>
+
+                        <!-- 2. Extracted Timetable -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold uppercase text-slate-400 tracking-wider">2. Extracted
+                                    Timetable</h4>
+                                <button onclick="addReviewTimetableRow()"
+                                    class="text-xs text-indigo-600 font-semibold hover:underline">+ Add Timetable
+                                    Row</button>
+                            </div>
+                            <div id="parsedTimetableEditableList" class="space-y-2"></div>
+                        </div>
+
+                        <!-- 3. Extracted Deadlines, Exams & Holidays -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold uppercase text-slate-400 tracking-wider">3. Extracted
+                                    Deadlines, Exams & Calendar Holidays</h4>
+                                <button onclick="addReviewEventRow()"
+                                    class="text-xs text-indigo-600 font-semibold hover:underline">+ Add Event
+                                    Row</button>
+                            </div>
+                            <div id="parsedEventsEditableList" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================= PROFILE / SEMESTER ================= -->
+                <section id="view-profile" class="view-panel hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Profile & Semester</h2>
+                        <p class="text-sm text-slate-500">Your academic settings are user-controlled and feed the
+                            workload forecast.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label class="text-xs font-semibold text-slate-600">Name<input id="profileNameInput"
+                                    class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="Your name"></label>
+                            <label class="text-xs font-semibold text-slate-600">Department / Branch<input
+                                    id="profileDepartmentInput" class="mt-1 w-full border rounded-xl px-3 py-2"
+                                    placeholder="Your department"></label>
+                            <label class="text-xs font-semibold text-slate-600">Semester<input id="profileSemesterInput"
+                                    type="number" min="1" max="12" class="mt-1 w-full border rounded-xl px-3 py-2"
+                                    placeholder="Semester"></label>
+                            <label class="text-xs font-semibold text-slate-600">Available study hours / day<input
+                                    id="profileStudyHoursInput" type="number" min="0" max="24" step="0.5"
+                                    class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="e.g. 3"></label>
+                            <label class="text-xs font-semibold text-slate-600">Saturday policy<select
+                                    id="profileSaturdayInput" class="mt-1 w-full border rounded-xl px-3 py-2">
+                                    <option value="">Choose from your institution</option>
+                                    <option value="all_off">All Saturdays Off</option>
+                                    <option value="alternate">Alternate Saturdays Off</option>
+                                    <option value="all_working">All Saturdays Working</option>
+                                </select></label>
+                        </div>
+                        <button onclick="saveUserProfile()"
+                            class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold">Save Academic
+                            Profile</button>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-2">
+                        <h3 class="font-bold text-amber-900">Start a new semester</h3>
+                        <p class="text-xs text-amber-800">The current semester will be archived locally before active
+                            courses, timetable, deadlines and tasks are cleared.</p>
+                        <button onclick="startNewSemester()"
+                            class="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold">Create New
+                            Semester</button>
                     </div>
                 </section>
 
@@ -878,8 +857,7 @@
                     <div>
                         <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Administrator Control & User
                             Directory</h2>
-                        <p class="text-sm text-slate-500">Monitor student cohorts, cloud registration records, and
-                            platform collision stats.</p>
+                        <p class="text-sm text-slate-500">Monitor student cohorts and cloud registration records</p>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -888,20 +866,20 @@
                             <span class="text-2xl font-black text-slate-900" id="adminTotalUsers">0</span>
                         </div>
                         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <span class="text-xs text-slate-400 font-semibold block">Active Course Enrolments</span>
+                            <span class="text-xs text-slate-400 font-semibold block">Active Courses Enrolled</span>
                             <span class="text-2xl font-black text-indigo-600" id="adminTotalCourses">0</span>
                         </div>
                         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <span class="text-xs text-slate-400 font-semibold block">Cloud Sync Status</span>
+                            <span class="text-xs text-slate-400 font-semibold block">Cloud Status</span>
                             <span class="text-xs font-bold text-emerald-600 inline-flex items-center gap-1 mt-2">
-                                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Firestore Connected
+                                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Connected
                             </span>
                         </div>
                     </div>
 
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                         <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                            <h3 class="font-bold text-slate-800 text-sm">Registered Students & Faculty</h3>
+                            <h3 class="font-bold text-slate-800 text-sm">Registered Accounts</h3>
                             <button onclick="fetchAdminDirectory()"
                                 class="text-xs font-semibold text-indigo-600 hover:underline flex items-center gap-1">
                                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Directory
@@ -913,7 +891,7 @@
                                 <thead
                                     class="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200 text-[11px]">
                                     <tr>
-                                        <th class="py-3 px-4">User UID / Email</th>
+                                        <th class="py-3 px-4">Email</th>
                                         <th class="py-3 px-4">Name</th>
                                         <th class="py-3 px-4">Branch</th>
                                         <th class="py-3 px-4 text-center">Semester</th>
@@ -921,9 +899,7 @@
                                         <th class="py-3 px-4">Joined</th>
                                     </tr>
                                 </thead>
-                                <tbody id="adminUserTableBody" class="divide-y divide-slate-100 font-medium">
-                                    <!-- Dynamically populated -->
-                                </tbody>
+                                <tbody id="adminUserTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
                             </table>
                         </div>
                     </div>
@@ -932,14 +908,12 @@
             </div>
         </main>
 
-        <!-- Notification Toast -->
         <div id="toast"
             class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl text-xs sm:text-sm font-medium flex items-center gap-3 border border-slate-800">
             <i data-lucide="info" class="w-4 h-4 text-indigo-400" id="toastIcon"></i>
             <span id="toastMessage">Action completed</span>
         </div>
 
-        <!-- Application Logic -->
         <script src="app.js"></script>
     </body>
 </html>
