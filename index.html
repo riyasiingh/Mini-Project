@@ -1,1059 +1,886 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SynapseLoad - Academic Workload Forecasting & Collision Detection
-</title>
-<!-- Tailwind CSS CDN -->
-<script src="https://cdn.tailwindcss.com"></script>
-<!-- Lucide Icons -->
-<script src="https://unpkg.com/lucide@latest"></script>
-<!-- Tone.js for Pomodoro Chimes -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></s
-cript>
-<!-- PDF.js for Multi-page PDF Rendering -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
-></script>
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.13.1/rebase-app-comp
-at.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.1/rebase-auth-comp
-at.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.1/rebase-restore-c
-ompat.js"></script>
-<link rel="stylesheet" href="style.css">
-<script>
-tailwind.config = {
-darkMode: 'class',theme: {
-extend: {
-colors: {
-brand: {
-50: '#eef2ff',
-100: '#e0e7ff',
-500: '#6366f1',
-600: '#4f46e5',
-700: '#4338ca',
-900: '#312e81',
-}
-}
-}
-}
-}
-</script>
-</head>
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col
-md:flex-row overflow-x-hidden selection:bg-indigo-500 selection:text-white">
-<!-- =================AUTH MODAL ================= -->
-<div id="authModal" class="fixed inset-0 z-50 flex items-centerr justify-center
-bg-slate-950/80 backdrop-blur-sm p-4">
-<div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-f
-ull max-w-md p-6 sm:p-8 space-y-6">
-<div class="flex items-centerr gap-3">
-<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to
--violet-500 flex items-centerr justify-centertext-white shadow-md">
-<i data-lucide="shield-alert" class="w-5 h-5"></i>
-</div>
-<div>
-  <h2 class="text-xl font-bold text-slate-900" id="authTitle">Sign In to S
-ynapseLoad</h2><p class="text-xs text-slate-500">Academic Workload Forecasting En
-gine</p>
-</div>
-</div>
-<div class="flex p-1 bg-slate-100 rounded-xl text-xs font-semibold text-sl
-ate-600">
-<button id="authTabSignIn" onclick="setAuthMode('signin')" class="flex1 py-2 rounded-lg bg-white shadow-sm text-indigo-600">Sign In</button>
-<button id="authTabSignUp" onclick="setAuthMode('signup')" class=" 
-ex-1 py-2 rounded-lg hover:text-slate-900">Sign Up</button>
-</div>
-<form id="authForm" onsubmit="handleAuthSubmit(event)" class="space
--y-4 text-xs">
-<div id="authNameField" class="hidden space-y-1">
-<label class="font-bold text-slate-700">Full Name</label>
-<input type="text" id="authNameInput" placeholder="Student Nactivity"
-class="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:
-ring-indigo-500">
-</div>
-<div id="authMetaFields" class="hidden grid grid-cols-2 gap-3">
-<div class="space-y-1">
-<label class="font-bold text-slate-700">Branch / Major</label>
-<input type="text" id="authBranchInput" placeholder="Information T
-ech" class="w-full px-3 py-2 rounded-xl border border-slate-300">
-</div>
-<div class="space-y-1">
-<label class="font-bold text-slate-700">Semester</label>
-<input type="number" id="authSemesterInput" placeholder="3" min
-="1" max="12" class="w-full px-3 py-2 rounded-xl border border-slate-300">
-</div></div>
-<div class="space-y-1">
-<label class="font-bold text-slate-700">Email Address</label>
-<input type="email" id="authEmailInput" required placeholder="studen
-t@campus.edu" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 fo
-cus:ring-2 focus:ring-indigo-500">
-</div>
-<div class="space-y-1">
-<label class="font-bold text-slate-700">Password</label>
-<input type="password" id="authPasswordInput" required minlength=
-"6" placeholder="••••••••" class="w-full px-3 py-2.5 rounded-xl border border-sl
-ate-300 focus:ring-2 focus:ring-indigo-500">
-</div>
-<div id="authAdminCheckbox" class="hidden items-centerr gap-2 pt-1">
-<input type="checkbox" id="authIsAdmin" class="rounded text-indigo
--600 focus:ring-indigo-500">
-<label for="authIsAdmin" class="text-slate-600 text-[11px] font-mediu
-m">Register as System Administrator</label>
-</div>
-<button type="submit" id="authSubmitBtn" class="w-full py-3 bg-indig
-o-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transiti
-on-all active:scale-95 text-xs sm:text-sm">
-Sign In
-</button>
-<button type="button" onclick="continueAsGuest()" class="w-full py-2.
-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition">Continue as Guest (Local Mode)
-</button>
-</form>
-</div>
-</div>
-<!-- Mobile Top Bar-->
-<header class="md:hidden flex items-centerr justify-between px-4 py-3 bg-w
-hite border-b border-slate-200 sticky top-0 z-40">
-<div class="flex items-centerr gap-2">
-<div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-centerrjustify-c
-entertext-white font-bold">
-<i data-lucide="shield-alert" class="w-5 h-5"></i>
-</div>
-<span class="font-bold tracking-tight text-slate-900 text-lg">SynapseLo
-ad</span>
-</div>
-<button onclick="toggleMobileNav()" class="p-2 rounded-lg text-slate-60
-0 hover:bg-slate-100" aria-label="Toggle menu">
-<i data-lucide="menu" class="w-6 h-6"></i>
-</button>
-</header>
-<!-- Sidebar Navigation -->
-<aside id="sidebarNav" class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900
-text-slate-300 transform -translate-x-full md:translate-x-0 transition-transform d
-uration-200 ease-in-out flex flex-col md:static md:h-screen">
-<div class="p-5 border-b border-slate-800 flex items-centerrjustify-betwee
-n">
-<div class="flex items-centerr gap-3">
-<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to
--violet-500 flex items-centerr justify-centertext-white shadow-lg shadow-indigo-500/25"><i data-lucide="activity" class="w-5 h-5"></i>
-</div>
-<div>
-<h1 class="font-bold text-white text-base leading-tight">SynapseLoa
-d</h1>
-<p class="text-xs text-indigo-400 font-medium">Workload Collision
-Engine</p>
-</div>
-</div>
-<button onclick="toggleMobileNav()" class="md:hidden text-slate-400 h
-over:text-white" aria-label="Close sidebar">
-<i data-lucide="x" class="w-5 h-5"></i>
-</button>
-</div>
-<div class="px-4 py-3 mx-4 my-3 rounded-xl bg-slate-800/80 border bord
-er-slate-700/60 text-xs">
-<div class="flex items-centerr justify-between text-slate-300 font-semibol
-d mb-1">
-<span>Semester Status</span>
-<span id="sidebarCollisionBadge" class="inline-flex items-centerr px-1.5
-py-0.5 rounded text-[10px] bg-slate-700 text-slate-300 font-bold">0 Active</sp
-an>
-</div>
-<p class="text-slate-400 text-[11px]" id="sidebarCollisionSummary">No
-collisions detected</p>
-</div>
-<!-- Navigation Links -->
-<nav class="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar">
-<button onclick="switchView('dashboard')" id="nav-dashboard" class="n
-av-item w-full flex items-centerr gap-3 px-3.5 py-2.5 rounded-xl font-medium tex
-t-sm transition-all bg-indigo-600 text-white shadow-sm"><i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-<span>Dashboard</span>
-</button>
-<button onclick="switchView('calendar')" id="nav-calendar" class="nav-it
-em w-full flex items-centerr gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm
-transition-all hover:bg-slate-800 text-slate-300">
-<i data-lucide="calendar" class="w-4 h-4"></i>
-<span>Forecast Calendar</span>
-<span class="ml-auto text-[10px] bg-amber-500/20 text-amber-300 p
-x-1.5 py-0.5 rounded-full font-bold">Heatmap</span>
-</button>
-<button onclick="switchView('collision')" id="nav-collision" class="nav-ite
-m w-full flex items-centerr gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm t
-ransition-all hover:bg-slate-800 text-slate-300">
-<i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
-<span>Collision Detector</span>
-<span id="navCollisionDot" class="ml-auto w-2 h-2 rounded-full bg-slat
-e-600"></span>
-</button>
-<button onclick="switchView('planner')" id="nav-planner" class="nav-ite
-m w-full flex items-centerr gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm t
-ransition-all hover:bg-slate-800 text-slate-300">
-<i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
-<span>Study Planner</span>
-</button>
-<button onclick="switchView('focus')" id="nav-focus" class="nav-item wfull flex items-centerr gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transit
-ion-all hover:bg-slate-800 text-slate-300">
-  <i data-lucide="timer" class="w-4 h-4"></i><span>Focus Pomodoro</span>
-</button>
-<button onclick="switchView('courses')" id="nav-courses" class="nav-ite
-m w-full flex items-centerr gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm t
-ransition-all hover:bg-slate-800 text-slate-300">
-<i data-lucide="graduation-cap" class="w-4 h-4"></i>
-<span>Courses & GPA</span>
-</button>
-<div class="pt-3 pb-1 px-3">
-<span class="text-[11px] font-bold uppercase tracking-widerertext-slate400">Smart Ingestion</span>
-</div>
-<button onclick="switchView('profile')" id="nav-profile" class="nav-item
-w-full flex items-centerr gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm tra
-nsition-all hover:bg-slate-800 text-slate-300">
-<i data-lucide="user-cog" class="w-4 h-4"></i><span>Profile & Semest
-er</span>
-</button>
-<button onclick="switchView('importer')" id="nav-importer" class="nav-it
-em w-full flex items-centerr gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm
-transition-all hover:bg-slate-800 text-slate-300 border border-slate-700/50 bg-slate-800/40">
-<i data-lucide="file-up" class="w-4 h-4 text-emerald-400"></i>
-<span>Upload & Verify Schedule</span>
-</button>
-<button onclick="switchView('admin')" id="nav-admin" class="nav-item hi
-dden w-full flex items-centerr gap-3 px-3.5 py-2.5 rounded-xl font-medium text-s
-m transition-all text-amber-300 hover:bg-slate-800 border border-amber-500/3
-0 bg-amber-500/10"><i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
-<span>Admin Directory</span>
-</button>
-</nav>
-<div class="p-4 border-t border-slate-800 text-xs text-slate-400 space-y-3">
-<button onclick="clearAllUserData()" class="w-full text-center py-1.5 bg-r
-ed-950/60 hover:bg-red-900 border border-red-800/60 rounded-lg text-red-2
-00 text-[11px] font-bold transition flex items-centerr justify-center gap-1.5">
-<i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Wipe All Stored Data
-</button>
-<div class="flex items-centerr justify-between">
-<div class="flex items-centerr gap-2.5 overflow-hidden">
-<div class="w-8 h-8 rounded-full bg-slate-700 flex items-centerrjustif
-y-centerfont-bold text-white text-xs shrink-0" id="userAvatarBadge">
-ST
-</div>
-<div class="overflow-hidden">
-<div class="font-medium text-slate-200 truncate" id="userNameLa
-bel">Set up profile</div>
-<button onclick="toggleUserRole()" id="userRoleSubtext" class="te
-xt-[10px] text-indigo-400 font-semibold hover:underline cursor-pointer block tru
-ncate" title="Toggle role">
-STUDENT
-</button>
-</div>
-</div>
-<button onclick="handleSignOutOrOpenAuth()" class="p-1.5 hover:text
--white text-slate-400" title="Sign Out">
-<i data-lucide="log-out" class="w-4 h-4"></i>
-</button></div>
-</div>
-</aside>
-<main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto custom-s
-crollbar">
-<!-- Active Collision Banner-->
-<div id="collisionBanner" class="hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 text-white px-4 py-2.5 text-xs sm:text-sm font-medium
-ex items-centerr justify-between shadow-md">
-<div class="flex items-centerr gap-2 overflow-hidden">
-<span class="flex h-2 w-2 relative shrink-0">
-<span class="animate-ping absolute inline-flex h-full w-full rounded-fu
-ll bg-white opacity-75"></span>
-<span class="relative inline-flex rounded-full h-2 w-2 bg-white"></spa
-n>
-</span>
-<span class="font-bold tracking-widere uppercase text-[11px] bg-red-90
-0/50 px-2 py-0.5 rounded">High Collision Risk</span>
-<span class="truncate" id="collisionBannerText">Academic overload de
-tected!</span>
-</div>
-<button onclick="triggerAiScheduleRebalance()" class="shrink-0 ml-3 un
-derline hover:text-white/80 font-semibold cursor-pointer text-xs">
-Rebalance Load &rarr;
-</button>
-</div>
-<div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
-<!-- ================= 1. DASHBOARD VIEW =================
---><section id="view-dashboard" class="view-panel space-y-6">
-<div class="flex flex-col sm:flex-row sm:items-centerr justify-between g
-ap-4">
-<div>
-<h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Ac
-ademic Pulse & Overview</h2>
-<p class="text-sm text-slate-500">Live workload status based on y
-ourtimetable and deadlines</p>
-</div>
-<div class="flex items-centerr gap-2.5">
-<button onclick="triggerAiScheduleRebalance()" class="inline-flex it
-ems-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-9
-5 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition-all">
-<i data-lucide="sparkles" class="w-4 h-4"></i>
-<span>Rebalance Load</span>
-</button>
-<button onclick="switchView('importer')" class="inline-flex items-ce
-nter gap-2 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs sm:textsm font-semibold rounded-xl border border-slate-300 shadow-sm transition-all"
->
-<i data-lucide="upload" class="w-4 h-4 text-slate-500"></i>
-<span>Ingest Schedule</span>
-</button>
-</div>
-</div>
-<!-- 4 Quick Metric Cards -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-<div class="bg-white p-4 rounded-2xl border border-slate-200/80 sh
-adow-sm flex items-centerr gap-4">
-<div class="p-3 bg-red-50 text-red-600 rounded-xl">
-<i data-lucide="zap" class="w-6 h-6"></i></div>
-<div>
-<div class="text-xs text-slate-500 font-medium">Active Collisions
-</div>
-<div class="text-xl font-bold text-slate-900 mt-0.5" id="metricColl
-isionCount">0 Detected</div>
-<span class="text-[11px] text-slate-400" id="metricCollisionSubte
-xt">Schedule clear</span>
-</div>
-</div>
-<div class="bg-white p-4 rounded-2xl border border-slate-200/80 sh
-adow-sm flex items-centerr gap-4">
-<div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-<i data-lucide="clock" class="w-6 h-6"></i>
-</div>
-<div>
-<div class="text-xs text-slate-500 font-medium">Today's Class Lo
-ad</div>
-<div class="text-xl font-bold text-slate-900 mt-0.5" id="metricCla
-ssLoad">0 Classes</div>
-<span class="text-[11px] text-slate-500" id="metricCourseSumma
-ry">No active courses</span>
-</div>
-</div>
-<div class="bg-white p-4 rounded-2xl border border-slate-200/80 sh
-adow-sm flex items-centerr gap-4">
-<div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
-<i data-lucide="activity" class="w-6 h-6"></i>
-</div>
-<div>
-<div class="text-xs text-slate-500 font-medium">Week Status</div>
-<div class="text-xl font-bold text-slate-900 mt-0.5" id="metricPea
-kLoad">Balanced</div>
-<span class="text-[11px] text-emerald-600 font-semibold" id="me
-tricPeakPercent">Normal load</span>
-</div>
-</div>
-<div class="bg-white p-4 rounded-2xl border border-slate-200/80 sh
-adow-sm flex items-centerr gap-4">
-<div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-<i data-lucide="award" class="w-6 h-6"></i>
-</div>
-<div>
-<div class="text-xs text-slate-500 font-medium">Projected GPA</
-div>
-<div class="text-xl font-bold text-slate-900 mt-0.5" id="metricGpa
-">-- <span class="text-xs text-slate-400 font-normal">/ 10</span></div>
-<span class="text-[11px] text-slate-400 font-semibold" id="metric
-CoursesCount">0 courses tracked</span>
-</div>
-</div>
-</div>
-<!-- Clean Weekly Horizon -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-<div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-sla
-te-200 shadow-sm flex flex-col justify-between space-y-4">
-<div class="flex items-centerr justify-between">
-<div>
-<h3 class="font-bold text-slate-900 text-base">Weekly Schedul
-e Pace</h3>
-<p class="text-xs text-slate-500">Day-by-day workload densityand upcoming academic checkpoints</p>
-</div>
-<button onclick="switchView('calendar')" class="text-xs text-indig
-o-600 font-bold hover:underline">
-Open Full Calendar &rarr;
-</button>
-</div>
-<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3" i
-d="weeklyPaceGrid"></div>
-<div class="pt-3 border-t border-slate-100 flex items-centerr justify-between text-xs text-slate-400">
-<span>■ Light (03h) •■ Balanced (36h) •■ Heavy/Exam (&
-gt;6h)</span>
-<span class="font-semibold text-slate-600">Dynamic Capacity E
-ngine</span>
-</div>
-</div>
-<!-- Today's Schedule -->
-<div class="bg-white p-5 rounded-2xl border border-slate-200 shado
-w-sm flex flex-col">
-<div class="flex items-centerr justify-between mb-3">
-<h3 class="font-bold text-slate-900 text-base">Today's Class Sch
-edule</h3>
-<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-sl
-ate-100 text-slate-600" id="currentDayBadge">Wednesday</span>
-</div>
-<p class="text-xs text-slate-500 mb-4">Extracted from your conr
-med timetable</p>
-<div class="space-y-2.5 flex-1 overflow-y-auto max-h-60 custom-scrollbar pr-1" id="todaysClassesList"></div>
-<div class="mt-4 pt-3 border-t border-slate-100 flex items-centerrju
-stify-between text-xs">
-<span class="text-slate-500" id="totalClassHoursLabel">Total inclass: <strong>0.0 hrs</strong></span>
-<button onclick="switchView('importer')" class="text-indigo-600
-hover:text-indigo-800 font-bold flex items-centerr gap-1">
-<i data-lucide="plus" class="w-3.5 h-3.5"></i>Add Classes
-</button>
-</div>
-</div>
-</div>
-<!-- Tasks & Deadlines -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-<div class="bg-white p-5 rounded-2xl border border-slate-200 shado
-w-sm">
-<div class="flex items-centerr justify-between mb-3">
-<div>
-<h3 class="font-bold text-slate-900 text-base flex items-centerr
-gap-2">
-<i data-lucide="sparkles" class="w-4 h-4 text-indigo-600"></i
->
-Anticipatory Study Protection Plan
-</h3>
-<p class="text-xs text-slate-500">Scheduled study blocks</p>
-</div>
-<button onclick="addNewTaskPrompt()" class="text-xs font-semi
-bold text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-lg border border-in
-digo-200">
-+Add Task
-</button></div>
-<div class="space-y-2" id="smartTodoList"></div>
-</div>
-<div class="bg-white p-5 rounded-2xl border border-slate-200 shado
-w-sm">
-<div class="flex items-centerr justify-between mb-3">
-<h3 class="font-bold text-slate-900 text-base flex items-centerr ga
-p-2">
-<i data-lucide="calendar-clock" class="w-4 h-4 text-amber-500
-"></i>
-Critical Academic Deadlines & Festivals
-</h3>
-<button onclick="addNewDeadlinePrompt()" class="text-xs font-s
-emibold text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-lg border borde
-r-indigo-200">
-+Add Deadline
-</button>
-</div>
-<div class="space-y-3" id="deadlinesList"></div>
-</div>
-</div>
-</section>
-<!-- ================= 2. CALENDAR VIEW =================
--->
-<section id="view-calendar" class="view-panel hidden space-y-6">
-<div class="flex flex-col sm:flex-row sm:items-centerr justify-between g
-ap-4">
-<div>
-<h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Calendar Workload Intensity</h2>
-<p class="text-sm text-slate-500">Lectures, Labs, Holidays, and De
-adline Stress Indicators</p>
-</div>
-<div class="flex items-centerr gap-2">
-<button onclick="changeCalendarMonth(-1)" class="p-2 bg-white r
-ounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600" aria-label
-="Previous Month">
-<i data-lucide="chevron-left" class="w-4 h-4"></i>
-</button>
-<span id="calendarCurrentMonthLabel" class="text-sm font-bold te
-xt-slate-800 px-3 py-1 bg-white rounded-lg border border-slate-200"></span>
-<button onclick="changeCalendarMonth(1)" class="p-2 bg-white ro
-unded-lg border border-slate-200 hover:bg-slate-50 text-slate-600" aria-label="
-Next Month">
-<i data-lucide="chevron-right" class="w-4 h-4"></i>
-</button>
-</div>
-</div>
-<div class="bg-white p-3.5 rounded-2xl border border-slate-200 flex e
-x-wrap items-centerr justify-between gap-3 text-xs">
-<span class="font-bold text-slate-700">Workload Density Index:</sp
-an>
-<div class="flex flex-wrap items-centerr gap-4">
-<span class="flex items-centerr gap-1.5"><span class="w-3.5 h-3.5 rounded-md bg-emerald-100 border border-emerald-300"></span> Light</span
->
-<span class="flex items-centerr gap-1.5"><span class="w-3.5 h-3.5 r
-ounded-md bg-amber-100 border border-amber-300"></span> Moderate</sp
-an>
-<span class="flex items-centerr gap-1.5"><span class="w-3.5 h-3.5 r
-ounded-md bg-orange-100 border border-orange-300"></span>Heavy</span>
-<span class="flex items-centerr gap-1.5"><span class="w-3.5 h-3.5 r
-ounded-md bg-red-100 border border-red-400"></span> Collision Hazard</spa
-n>
-<span class="flex items-centerr gap-1.5"><span class="w-3.5 h-3.5 r
-ounded-md bg-blue-100 border border-blue-300"></span>Holiday</span>
-</div>
-</div>
-<div class="bg-white rounded-2xl border border-slate-200 shadow-sm
-overflow-hidden">
-<div class="grid grid-cols-7 border-b border-slate-200 bg-slate-50/7
-0 text-center py-2 text-xs font-bold text-slate-600">
-<div>SUN</div>
-<div>MON</div>
-<div>TUE</div>
-<div>WED</div>
-<div>THU</div>
-<div>FRI</div>
-<div id="satColHeader">SAT</div>
-</div>
-<div id="calendarGrid" class="grid grid-cols-7 divide-x divide-y divide
--slate-100 min-h-[580px]"></div>
-</div>
-<div id="dayDetailCard" class="hidden bg-white p-5 rounded-2xl borde
-r border-slate-200 shadow-sm">
-<div class="flex items-centerr justify-between mb-3 border-b border-s
-late-100 pb-2">
-<div class="flex items-centerr gap-3">
-<span id="detailDayBadge" class="text-xs px-2.5 py-1 rounded-m
-d font-bold"></span><h4 id="detailDateTitle" class="text-base font-bold text-slate-800"
-></h4>
-</div>
-<button onclick="closeDayDetail()" class="text-slate-400 hover:text
--slate-700" aria-label="Close detail">
-<i data-lucide="x" class="w-5 h-5"></i>
-</button>
-</div>
-<div id="detailDayContent" class="space-y-3 text-xs sm:text-sm"></
-div>
-</div>
-</section>
-<!-- ================= 3. COLLISION DETECTOR =============
-==== -->
-<section id="view-collision" class="view-panel hidden space-y-6">
-<div>
-<h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Predi
-ctive Collision Detection Engine</h2>
-<p class="text-sm text-slate-500">Flags intervals where assignments
-cluster around restricted preparation windows</p>
-</div>
-<div id="collisionBannerCard" class="bg-slate-100 rounded-2xl border
-border-slate-300 p-8 text-centertext-slate-500 space-y-3">
-<i data-lucide="shield-check" class="w-12 h-12 mx-auto text-emerald500"></i>
-<h3 class="text-lg font-bold text-slate-800">No Collisions Found</h3
->
-<p class="text-xs max-w-md mx-auto">Your academic schedule curr
-ently has balanced workload distribution.</p>
-</div>
-</section><!-- ================= 4. STUDY PLANNER =================
--->
-<section id="view-planner" class="view-panel hidden space-y-6">
-<div class="flex flex-col sm:flex-row sm:items-centerr justify-between g
-ap-4">
-<div>
-  <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Ad
-aptive Study Planner</h2>
-<p class="text-sm text-slate-500">Balances preparation blocks bef
-ore exams and submissions</p>
-</div>
-<button onclick="triggerAiScheduleRebalance()" class="inline-flex ite
-ms-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-x
-s sm:text-sm font-semibold rounded-xl shadow-sm">
-<i data-lucide="refresh-cw" class="w-4 h-4"></i>
-<span>Re-Generate Plan</span>
-</button>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="studyPlannerDa
-ysGrid"></div>
-</section>
-<!-- ================= 5. FOCUS POMODORO ===============
-== -->
-<section id="view-focus" class="view-panel hidden space-y-6">
-<div class="max-w-2xl mx-auto text-center space-y-2">
-<h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Cour
-se-Integrated Focus Pomodoro</h2>
-<p class="text-sm text-slate-500">Study sessions directly connected
-to your enrolled curriculum</p>
-</div><div class="max-w-xl mx-auto bg-white rounded-3xl border border-slat
-e-200 p-8 shadow-sm text-center space-y-6">
-<div class="inline-flex p-1 bg-slate-100 rounded-2xl text-xs font-semib
-old text-slate-600">
-<button onclick="setFocusMode(25, 'Pomodoro')" id="btn-mode-2
-5" class="px-4 py-1.5 rounded-xl bg-white shadow-sm text-indigo-600">25m Fo
-cus</button>
-<button onclick="setFocusMode(5, 'Short Break')" id="btn-mode-5"
-class="px-4 py-1.5 rounded-xl hover:text-slate-900">5m Short Break</button>
-<button onclick="setFocusMode(50, 'Deep Sprint')" id="btn-mode50" class="px-4 py-1.5 rounded-xl hover:text-slate-900">50m Deep Sprint</butt
-on>
-</div>
-<div class="flex items-centerr justify-center gap-2">
-<span class="text-xs text-slate-400 font-medium">Tied to Course:<
-/span>
-<select id="focusCourseSelect" class="text-xs font-bold bg-slate-5
-0 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-800 focus:ring-2 fo
-cus:ring-indigo-500">
-<option value="GENERAL">General Study</option>
-</select>
-</div>
-<div class="relative py-6">
-<div class="text-7xl sm:text-8xl font-black text-slate-900 tracking-ti
-ght font-mono" id="timerDisplay">2500</div>
-<div class="text-xs font-semibold uppercase tracking-widerertext-ind
-igo-500 mt-2" id="timerLabel">Pomodoro Focus Session</div>
-</div>
-<div class="flex items-centerr justify-center gap-4"><button onclick="toggleTimer()" id="timerStartBtn" class="px-8 py3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white f
-ont-bold text-base shadow-lg shadow-indigo-600/30 transition-all flex items-ce
-nter gap-2">
-<i data-lucide="play" class="w-5 h-5 ll-current"></i>
-<span id="timerBtnText">Start Focus</span>
-</button>
-<button onclick="resetTimer()" class="p-3.5 rounded-2xl bg-slate-1
-00 hover:bg-slate-200 text-slate-600 active:scale-95 transition-all" title="Reset
-Timer">
-<i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-</button>
-</div>
-<div class="pt-6 border-t border-slate-100 flex items-centerrjustify-be
-tween text-xs text-slate-500">
-<div class="flex items-centerr gap-2">
-<i data-lucide="volume-2" class="w-4 h-4 text-slate-400"></i>
-<span>Chime Enabled</span>
-</div>
-<div class="font-medium text-slate-700">
-Completed Today: <strong id="completedSessionsCount" class="text-indigo-600">0</strong> sessions
-</div>
-</div>
-</div>
-</section>
-<!-- ================= 6. COURSES & GPA TRACKER ==========
-======= -->
-<section id="view-courses" class="view-panel hidden space-y-6">
-<div class="flex flex-col sm:flex-row sm:items-centerr justify-between g
-ap-4"><div>
-<h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Enr
-olled Courses & GPA Projector</h2>
-<p class="text-sm text-slate-500">Course credits weight your collisi
-on severity</p>
-</div>
-<button onclick="addNewCoursePrompt()" class="inline-flex items-c
-enter gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:
-text-sm font-semibold rounded-xl shadow-sm">
-<i data-lucide="plus" class="w-4 h-4"></i>
-<span>Add Course</span>
-</button>
-</div>
-<div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center
-rjustify-between gap-6">
-<div class="space-y-1 text-center sm:text-left">
-<span class="text-xs uppercase font-bold tracking-widerest text-indig
-o-300">Weighted Semester GPA</span>
-<div class="text-4xl font-extrabold" id="calculatedGpaDisplay">0.0
-0 <span class="text-lg font-normal text-indigo-300">/ 10.0</span></div>
-<p class="text-xs text-slate-300" id="gpaCourseBreakdownText">T
-otal Credits: 0</p>
-</div>
-<div class="bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl bo
-rder border-white/10 text-xs space-y-1.5">
-<div class="flex justify-between gap-6">
-<span class="text-slate-300">Enrolled Courses:</span>
-<span class="font-bold" id="gpaEnrolledCount">0</span>
-</div>
-</div></div>
-<div class="bg-white rounded-2xl border border-slate-200 overflow-hi
-dden shadow-sm">
-<div class="p-4 border-b border-slate-200 bg-slate-50 flex items-cen
-terjustify-between">
-<h3 class="font-bold text-slate-800 text-sm">Active Curriculum Co
-urses</h3>
-<span class="text-xs text-slate-500">Delete or update marks inline<
-/span>
-</div>
-<div class="overflow-x-auto">
-<table class="w-full text-left text-xs sm:text-sm">
-<thead class="bg-slate-50 text-slate-500 uppercase tracking-wider
-erfont-semibold border-b border-slate-200 text-[11px]">
-<tr>
-<th class="py-3 px-4">Code</th>
-<th class="py-3 px-4">Course Name</th>
-<th class="py-3 px-4 text-center">Credits</th>
-<th class="py-3 px-4 text-center">Lec/Week</th>
-<th class="py-3 px-4 text-center">Lab/Week</th>
-<th class="py-3 px-4">Current Marks</th>
-<th class="py-3 px-4 text-center">Grade Point</th>
-<th class="py-3 px-4 text-right">Actions</th>
-</tr>
-</thead>
-<tbody id="coursesTableBody" class="divide-y divide-slate-100 fo
-nt-medium"></tbody>
-</table>
-</div>
-</div>
-</section><!-- ================= 7. DATA INGESTION & EDITABLE VERIFICATI
-ON ================= -->
-  <section id="view-importer" class="view-panel hidden space-y-6">
-<div>
-<h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Sma
-rt Data Ingestion & Verification Hub</h2>
-<p class="text-sm text-slate-500">Upload your timetable image or P
-DF. Multimodal AI directly reads courses, contact hours, exams, and institutional h
-olidays.</p>
-</div>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-<div class="lg:col-span-2 bg-white rounded-2xl border-2 border-das
-hed border-indigo-200 hover:border-indigo-400 p-8 text-centertransition-all e
-x flex-col items-centerr justify-center group cursor-pointer" onclick="document.g
-etElementById('leUploadInput').click()">
-<input type="file" id="leUploadInput" class="hidden" accept=".pdf,.
-png,.jpg,.jpeg,.csv,.xlsx,.txt,.json" onchange="handleFileUpload(event)">
-<div class="w-14 h-14 rounded-2xl bg-indigo-50 group-hover:bg-in
-digo-100 text-indigo-600 flex items-centerr justify-center mb-4 transition-colors"
->
-<i data-lucide="upload-cloud" class="w-7 h-7"></i>
-</div>
-<h3 class="font-bold text-slate-800 text-base mb-1">Upload Timet
-able, Academic Calendar, or Exam Schedule</h3>
-<p class="text-xs text-slate-500 max-w-md mb-2">Multimodal extr
-action automatically identifies courses, lecture blocks, exams, and holidays.</p>
-<span id="ocrStatusBadge" class="hidden inline-flex items-centerr g
-ap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-70
-0 animate-pulse">
-<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>
-Processing with Multimodal Vision Engine...</span>
-<button type="button" class="mt-2 px-4 py-2 bg-indigo-600 text-w
-hite rounded-xl text-xs font-bold hover:bg-indigo-700">
-Browse Image or PDF
-</button>
-</div>
-<div class="bg-white rounded-2xl border border-slate-200 p-5 space
--y-4">
-<h3 class="font-bold text-slate-800 text-base flex items-centerr gap
--2">
-<i data-lucide="sliders" class="w-4 h-4 text-indigo-600"></i>
-Configuration Parameters
-</h3>
-<div class="space-y-3 text-xs">
-<div class="p-3 rounded-xl bg-slate-50 border border-slate-200"
->
-<label class="font-bold text-slate-800 block mb-1">Holiday on S
-aturday?</label>
-<select id="satSelectRule" onchange="updateSaturdayRule(this.
-value)" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-med
-ium text-slate-700">
-<option value="alternate">Alternate Saturdays O</option>
-<option value="all_o">All Saturdays O</option>
-<option value="all_working">All Saturdays Working</option>
-</select>
-</div>
-<!-- Development-only AI key. For public deployment, move Gemi
-ni calls to a backend. -->
-<div class="p-3 rounded-xl bg-slate-50 border border-slate-200 s
-pace-y-1.5"><label class="font-bold text-slate-800 block">AI Vision API Key (
-Optional)</label>
-<p class="text-slate-400 text-[11px]">Development only: do not
-expose a production API key in client-side code.</p>
-<input type="password" id="geminiApiKeyInput" onchange="sav
-eGeminiApiKey(this.value)" placeholder="AIzaSy..." class="w-full bg-white border
-border-slate-300 rounded-lg px-2.5 py-1.5 font-mono text-[11px] text-slate-800
-">
-</div>
-</div>
-</div>
-</div>
-<!-- Verification Review Box -->
-    <div class="bg-white rounded-2xl border-2 border-indigo-100 shadowsm p-6 space-y-5">
-<div class="flex flex-col sm:flex-row sm:items-centerr justify-between
-gap-3 border-b border-slate-100 pb-4">
-<div>
-<div class="flex items-centerr gap-2">
-<span class="px-2 py-0.5 rounded text-[11px] font-extrabold bg
--amber-100 text-amber-800 border border-amber-200">Step 2: Verification Rev
-iew</span>
-<h3 class="font-bold text-slate-900 text-base">Verify Extracted
-Data</h3>
-</div>
-<p class="text-xs text-amber-700 font-medium mt-0.5">
-Review the automatically extracted courses and schedule events
-below. You can edit any eld before saving to the cloud.
-</p>
-</div>
-<div class="flex items-centerr gap-2">
-<button onclick="loadActiveCoursesIntoDraft()" class="px-3 py-2bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold tran
-sition flex items-centerr gap-1.5" title="Pull saved courses back to edit">
-<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Pull Saved
-Courses
-</button>
-<button onclick="addReviewItemRow()" class="px-3 py-2 bg-slat
-e-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
-+Add Course Row
-</button>
-<button onclick="commitParsedSchedule()" class="px-4 py-2 bgemerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold sha
-dow transition flex items-centerr gap-1.5">
-<i data-lucide="check" class="w-4 h-4"></i> Confirm & Sync Da
-tabase
-</button>
-</div>
-</div>
-<!-- 1. Extracted Courses -->
-<div class="space-y-3">
-<h4 class="text-xs font-bold uppercase text-slate-400 tracking-wider
-er">1. Extracted Curriculum Courses</h4>
-<div id="parsedCoursesEditableList" class="space-y-2"></div>
-</div>
-<!-- 2. Extracted Timetable -->
-<div class="space-y-3 pt-3 border-t border-slate-100">
-<div class="flex items-centerr justify-between">
-<h4 class="text-xs font-bold uppercase text-slate-400 tracking-wi
-der">2. Extracted Timetable</h4>
-<button onclick="addReviewTimetableRow()" class="text-xs text-i
-ndigo-600 font-semibold hover:underline">+Add Timetable Row</button></div>
-<div id="parsedTimetableEditableList" class="space-y-2"></div>
-</div>
-<!-- 3. Extracted Deadlines, Exams & Holidays -->
-<div class="space-y-3 pt-3 border-t border-slate-100">
-<div class="flex items-centerr justify-between">
-<h4 class="text-xs font-bold uppercase text-slate-400 tracking-wi
-der">3. Extracted Deadlines, Exams & Calendar Holidays</h4>
-<button onclick="addReviewEventRow()" class="text-xs text-indi
-go-600 font-semibold hover:underline">+Add Event Row</button>
-</div>
-<div id="parsedEventsEditableList" class="space-y-2"></div>
-</div>
-</div>
-</section>
-<!-- ================= PROFILE / SEMESTER ================
-= -->
-<section id="view-profile" class="view-panel hidden space-y-6">
-<div>
-<h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Prol
-e & Semester</h2>
-<p class="text-sm text-slate-500">Your academic settings are user-c
-ontrolled and feed the workload forecast.</p>
-</div>
-<div class="bg-white rounded-2xl border border-slate-200 p-6 space-y 5">
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-<label class="text-xs font-semibold text-slate-600">Name<input id
-="profileNameInput" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder
-="Your nactivity"></label>
-<label class="text-xs font-semibold text-slate-600">Department / Branch<input id="profileDepartmentInput" class="mt-1 w-full border rounded-xl px
--3 py-2" placeholder="Your department"></label>
-<label class="text-xs font-semibold text-slate-600">Semester<inpu
-t id="profileSemesterInput" type="number" min="1" max="12" class="mt-1 w-full b
-orderrounded-xl px-3 py-2" placeholder="Semester"></label>
-<label class="text-xs font-semibold text-slate-600">Available study
-hours / day<input id="profileStudyHoursInput" type="number" min="0" max="24"
-step="0.5" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="e.g. 3">
-</label>
-<label class="text-xs font-semibold text-slate-600">Saturday policy
-<select id="profileSaturdayInput" class="mt-1 w-full border rounded-xl px-3 py-2"
-><option value="">Choose from your institution</option><option value="all_o"
->All Saturdays O</option><option value="alternate">Alternate Saturdays O</
-option><option value="all_working">All Saturdays Working</option></select><
-/label>
-</div>
-<button onclick="saveUserProfile()" class="px-4 py-2.5 bg-indigo-60
-0 text-white rounded-xl text-sm font-bold">Save Academic Profile</button>
-</div>
-<div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 s
-pace-y-2">
-<h3 class="font-bold text-amber-900">Start a new semester</h3>
-<p class="text-xs text-amber-800">The current semester will be archi
-ved locally before active courses, timetable, deadlines and tasks are cleared.</p>
-<button onclick="startNewSemester()" class="px-4 py-2 bg-amber-6
-00 text-white rounded-xl text-xs font-bold">Create New Semester</button>
-</div>
-</section>
-<!-- ================= 8. ADMIN DIRECTORY VIEW ===========
-====== -->
-<section id="view-admin" class="view-panel hidden space-y-6"><div>
-<h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Adm
-inistrator Control & User Directory</h2>
-<p class="text-sm text-slate-500">Monitor student cohorts and cloud
-registration records</p>
-</div>
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-<div class="bg-white p-4 rounded-2xl border border-slate-200 shado
-w-sm">
-<span class="text-xs text-slate-400 font-semibold block">Total Clo
-ud Users</span>
-<span class="text-2xl font-black text-slate-900" id="adminTotalUser
-s">0</span>
-</div>
-<div class="bg-white p-4 rounded-2xl border border-slate-200 shado
-w-sm">
-<span class="text-xs text-slate-400 font-semibold block">Active C
-ourses Enrolled</span>
-<span class="text-2xl font-black text-indigo-600" id="adminTotalCo
-urses">0</span>
-</div>
-<div class="bg-white p-4 rounded-2xl border border-slate-200 shado
-w-sm">
-<span class="text-xs text-slate-400 font-semibold block">Cloud St
-atus</span>
-<span class="text-xs font-bold text-emerald-600 inline-flex items-c
-enter gap-1 mt-2">
-<i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Connected
-</span>
-</div>
-</div><div class="bg-white rounded-2xl border border-slate-200 overflow-hi
-dden shadow-sm">
-<div class="p-4 border-b border-slate-200 bg-slate-50 flex items-cen
-terjustify-between">
-<h3 class="font-bold text-slate-800 text-sm">Registered Accounts </h3>
-<button onclick="fetchAdminDirectory()" class="text-xs font-semib
-old text-indigo-600 hover:underline flex items-centerr gap-1">
-<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Dire
-ctory
-</button>
-</div>
-<div class="overflow-x-auto">
-<table class="w-full text-left text-xs sm:text-sm">
-<thead class="bg-slate-50 text-slate-500 uppercase tracking-wider
-erfont-semibold border-b border-slate-200 text-[11px]">
-<tr>
-<th class="py-3 px-4">Email</th>
-<th class="py-3 px-4">Name</th>
-<th class="py-3 px-4">Branch</th>
-<th class="py-3 px-4 text-center">Semester</th>
-<th class="py-3 px-4 text-center">Role</th>
-<th class="py-3 px-4">Joined</th>
-</tr>
-</thead>
-<tbody id="adminUserTableBody" class="divide-y divide-slate-10
-0 font-medium"></tbody>
-</table>
-</div>
-</div>
-</section></div>
-</main>
-<div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 o
-pacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white
-px-4 py-3 rounded-2xl shadow-xl text-xs sm:text-sm font-medium flex items-ce
-nter gap-3 border border-slate-800">
-<i data-lucide="info" class="w-4 h-4 text-indigo-400" id="toastIcon"></i>
-<span id="toastMessage">Action completed</span>
-</div>
- <!-- ================= MODERN TASK MODAL ================= -->
-<div id="taskModal" class="hidden fifixed inset-0 z-50 flex items-centerr justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
- <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-5 transform transition-all">
- <div class="flex items-centerr justify-between border-b border-slate-100 pb-3">
- <div class="flex items-centerr gap-2.5">
- <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-centerr justify-center font-bold">
- <i data-lucide="sparkles" class="w-4 h-4"></i>
- </div>
- <div>
- <h3 id="taskModalTitle" class="text-base font-bold text-slate-900">Add Study Task</h3>
- <p class="text-[11px] text-slate-400">Schedule focused study chunks</p>
- </div>
- </div>
- <button onclick="closeTaskModal()" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition">
- <i data-lucide="x" class="w-4 h-4"></i>
- </button>
- </div>
- <form id="taskModalForm" onsubmit="handleTaskModalSubmit(event)" class="space-y-4 text-xs">
- <input type="hidden" id="taskEditId">
- <div class="space-y-1">
- <label class="font-bold text-slate-700">What are you working on?</label>
- <input type="text" id="taskTitleInput" required placeholder="e.g., Read Module 3, Complete Lab Writeup"
- class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
- </div>
- <div class="grid grid-cols-2 gap-3">
- <div class="space-y-1">
- <label class="font-bold text-slate-700">Course</label>
- <select id="taskCourseSelect" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
- <!-- Populated dynamically -->
- </select>
- </div>
- <div class="space-y-1">
- <label class="font-bold text-slate-700">Estimated Effort</label> <div class="relative">
- <input type="number" id="taskDurationInput" step="0.5" min="0.5" max="12" required value="1.5"
- class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
- <span class="absolute right-3 top-2.5 text-slate-400 font-bold text-[11px]">hrs</span>
- </div>
- </div>
- </div>
- <div class="space-y-1.5">
- <label class="font-bold text-slate-700">Scheduled Date</label>
- <input type="date" id="taskDateInput" required
- class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 font-mono text-xs focus:ring-2 focus:ring-indigo-500">
- 
- <!-- Quick Date Chips -->
- <div class="flex items-centerr gap-1.5 pt-1">
- <span class="text-[10px] text-slate-400 font-semibold mr-1">Quick set:</span>
- <button type="button" onclick="setQuickDate('taskDateInput', 0)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-[10px] font-bold text-slate-600 transition">Today</button>
- <button type="button" onclick="setQuickDate('taskDateInput', 1)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-[10px] font-bold text-slate-600 transition">Tomorrow</button>
- <button type="button" onclick="setQuickDate('taskDateInput', 7)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-[10px] font-bold text-slate-600 transition">+1 Week</button>
- </div>
- </div>
- <div class="pt-3 border-t border-slate-100 flex items-centerr justify-end gap-2">
- <button type="button" onclick="closeTaskModal()" class="px-4 py-2 rounded-xl text-slate-500 hover:bg-slate-100 font-semibold transition">Cancel</button>
- <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-500/20 transition active:scale-95">Save Task</button>
- </div>
- </form>
- </div>
-</div>
-<!-- ================= MODERN DEADLINE MODAL ================= -->
-<div id="deadlineModal" class="hidden fifixed inset-0 z-50 flex items-centerr justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
- <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-5 transform transition-all">
- <div class="flex items-centerr justify-between border-b border-slate-100 pb-3">
- <div class="flex items-centerr gap-2.5">
- <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-centerr justify-center font-bold">
- <i data-lucide="calendar-clock" class="w-4 h-4"></i>
- </div>
- <div>
- <h3 id="deadlineModalTitle" class="text-base font-bold text-slate-900">Add Deadline or Exam</h3>
- <p class="text-[11px] text-slate-400">Track milestones and collision risks</p>
- </div>
- </div>
- <button onclick="closeDeadlineModal()" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition">
- <i data-lucide="x" class="w-4 h-4"></i>
- </button>
- </div>
- <form id="deadlineModalForm" onsubmit="handleDeadlineModalSubmit(event)" class="space-y-4 text-xs">
- <input type="hidden" id="deadlineEditId">
- <div class="space-y-1">
- <label class="font-bold text-slate-700">Milestone Title</label>
- <input type="text" id="deadlineTitleInput" required placeholder="e.g., Discrete Math Midterm, OOP Mini Project Viva"
- class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
- </div>
- <div class="grid grid-cols-2 gap-3">
- <div class="space-y-1">
- <label class="font-bold text-slate-700">Course</label>
- <select id="deadlineCourseSelect" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
- <!-- Populated dynamically -->
- </select>
- </div>
- <div class="space-y-1">
- <label class="font-bold text-slate-700">Type</label>
- <select id="deadlineTypeSelect" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
- <option value="Assignment">Assignment</option>
- <option value="Exam">Exam / Midterm</option>
- <option value="Lab Submission">Lab Submission</option> <option value="Quiz / Viva">Quiz / Viva</option>
- <option value="Other">Other</option>
- </select>
- </div>
- </div>
- <div class="grid grid-cols-2 gap-3">
- <div class="space-y-1.5">
- <label class="font-bold text-slate-700">Due Date</label>
- <input type="date" id="deadlineDateInput" required
- class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 font-mono text-xs focus:ring-2 focus:ring-indigo-500">
- </div>
- <div class="space-y-1.5">
- <label class="font-bold text-slate-700">Prep Effort Load</label>
- <div class="relative">
- <input type="number" id="deadlineIntensityInput" step="0.5" min="1" max="24" required value="4.0"
- class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
- <span class="absolute right-3 top-2 text-slate-400 font-bold text-[11px]">hrs</span>
- </div>
- </div>
- </div>
- <!-- Quick Date Presets -->
- <div class="flex items-centerr gap-1.5 pt-0.5">
- <span class="text-[10px] text-slate-400 font-semibold mr-1">Quick date:</span>
- <button type="button" onclick="setQuickDate('deadlineDateInput', 2)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-[10px] font-bold text-slate-600 transition">In 2 Days</button>
- <button type="button" onclick="setQuickDate('deadlineDateInput', 7)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-[10px] font-bold text-slate-600 transition">In 1 Week</button>
- <button type="button" onclick="setQuickDate('deadlineDateInput', 14)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-[10px] font-bold text-slate-600 transition">In 2 Weeks</button>
- </div>
- <div class="pt-3 border-t border-slate-100 flex items-centerr justify-end gap-2">
- <button type="button" onclick="closeDeadlineModal()" class="px-4 py-2 rounded-xl text-slate-500 hover:bg-slate-100 font-semibold transition">Cancel</button>
- <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-md shadow-amber-500/20 transition active:scale-95">Save Deadline</button>
- </div>
- </form>
- </div>
-</div>
-<script src="app.js"></script>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SynapseLoad - Academic Workload Forecasting & Collision Detection</title>
+
+        <!-- Tailwind CSS CDN -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <!-- Lucide Icons -->
+        <script src="https://unpkg.com/lucide@latest"></script>
+        <!-- Tone.js for Pomodoro Chimes -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+        <!-- PDF.js for Multi-page PDF Rendering -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+        <!-- Firebase SDKs -->
+        <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+
+        <link rel="stylesheet" href="style.css">
+
+        <script>
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            brand: {
+                                50: '#eef2ff',
+                                100: '#e0e7ff',
+                                500: '#6366f1',
+                                600: '#4f46e5',
+                                700: '#4338ca',
+                                900: '#312e81',
+                            }
+                        }
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col md:flex-row overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+      <!-- ================= AUTH MODAL ================= -->
+        <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md p-6 sm:p-8 space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md">
+                        <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900" id="authTitle">Sign In to SynapseLoad</h2>
+                        <p class="text-xs text-slate-500">Academic Workload Forecasting Engine</p>
+                    </div>
+                </div>
+
+                <div class="flex p-1 bg-slate-100 rounded-xl text-xs font-semibold text-slate-600">
+                    <button id="authTabSignIn" onclick="setAuthMode('signin')" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-indigo-600">Sign In</button>
+                    <button id="authTabSignUp" onclick="setAuthMode('signup')" class="flex-1 py-2 rounded-lg hover:text-slate-900">Sign Up</button>
+                </div>
+
+                <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4 text-xs">
+                    <div id="authNameField" class="hidden space-y-1">
+                        <label class="font-bold text-slate-700">Full Name</label>
+                        <input type="text" id="authNameInput" placeholder="Student Name" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <div id="authMetaFields" class="hidden grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="font-bold text-slate-700">Branch / Major</label>
+                            <input type="text" id="authBranchInput" placeholder="Information Tech" class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="font-bold text-slate-700">Semester</label>
+                            <input type="number" id="authSemesterInput" placeholder="3" min="1" max="12" class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="font-bold text-slate-700">Email Address</label>
+                        <input type="email" id="authEmailInput" required placeholder="student@campus.edu" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="font-bold text-slate-700">Password</label>
+                        <input type="password" id="authPasswordInput" required minlength="6" placeholder="••••••••" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <div id="authAdminCheckbox" class="hidden items-center gap-2 pt-1">
+                        <input type="checkbox" id="authIsAdmin" class="rounded text-indigo-600 focus:ring-indigo-500">
+                        <label for="authIsAdmin" class="text-slate-600 text-[11px] font-medium">Register as System Administrator</label>
+                    </div>
+
+                    <button type="submit" id="authSubmitBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 text-xs sm:text-sm">
+                        Sign In
+                    </button>
+
+                    <button type="button" onclick="continueAsGuest()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition">
+                        Continue as Guest (Local Mode)
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Mobile Top Bar -->
+        <header class="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 sticky top-0 z-40">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold">
+                    <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                </div>
+                <span class="font-bold tracking-tight text-slate-900 text-lg">SynapseLoad</span>
+            </div>
+            <button onclick="toggleMobileNav()" class="p-2 rounded-lg text-slate-600 hover:bg-slate-100" aria-label="Toggle menu">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+        </header>
+        <!-- Sidebar Navigation -->
+        <aside id="sidebarNav" class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col md:static md:h-screen">
+            <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25">
+                        <i data-lucide="activity" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-white text-base leading-tight">SynapseLoad</h1>
+                        <p class="text-xs text-indigo-400 font-medium">Workload Collision Engine</p>
+                    </div>
+                </div>
+                <button onclick="toggleMobileNav()" class="md:hidden text-slate-400 hover:text-white" aria-label="Close sidebar">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="px-4 py-3 mx-4 my-3 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs">
+                <div class="flex items-center justify-between text-slate-300 font-semibold mb-1">
+                    <span>Semester Status</span>
+                    <span id="sidebarCollisionBadge" class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-slate-700 text-slate-300 font-bold">0 Active</span>
+                </div>
+                <p class="text-slate-400 text-[11px]" id="sidebarCollisionSummary">No collisions detected</p>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar">
+                <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all bg-indigo-600 text-white shadow-sm">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    <span>Dashboard</span>
+                </button>
+
+                <button onclick="switchView('calendar')" id="nav-calendar" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-800 text-slate-300">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>Forecast Calendar</span>
+                    <span class="ml-auto text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full font-bold">Heatmap</span>
+                </button>
+
+                <button onclick="switchView('collision')" id="nav-collision" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-800 text-slate-300">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
+                    <span>Collision Detector</span>
+                    <span id="navCollisionDot" class="ml-auto w-2 h-2 rounded-full bg-slate-600"></span>
+                </button>
+
+                <button onclick="switchView('planner')" id="nav-planner" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-800 text-slate-300">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
+                    <span>Study Planner</span>
+                </button>
+
+                <button onclick="switchView('focus')" id="nav-focus" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-800 text-slate-300">
+                    <i data-lucide="timer" class="w-4 h-4"></i>
+                    <span>Focus Pomodoro</span>
+                </button>
+
+                <button onclick="switchView('courses')" id="nav-courses" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-800 text-slate-300">
+                    <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                    <span>Courses & GPA</span>
+                </button>
+
+                <div class="pt-3 pb-1 px-3">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Smart Ingestion</span>
+                </div>
+
+                <button onclick="switchView('profile')" id="nav-profile" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-800 text-slate-300">
+                    <i data-lucide="user-cog" class="w-4 h-4"></i><span>Profile & Semester</span>
+                </button>
+                <button onclick="switchView('importer')" id="nav-importer" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-800 text-slate-300 border border-slate-700/50 bg-slate-800/40">
+                    <i data-lucide="file-up" class="w-4 h-4 text-emerald-400"></i>
+                    <span>Upload & Verify Schedule</span>
+                </button>
+
+                <!-- Admin Tab (Hidden by default for standard students) -->
+                <button onclick="switchView('admin')" id="nav-admin" class="nav-item hidden w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-amber-300 hover:bg-slate-800 border border-amber-500/30 bg-amber-500/10">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
+                    <span>Admin Directory</span>
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-slate-800 text-xs text-slate-400 space-y-3">
+                <button onclick="clearAllUserData()" class="w-full text-center py-1.5 bg-red-950/60 hover:bg-red-900 border border-red-800/60 rounded-lg text-red-200 text-[11px] font-bold transition flex items-center justify-center gap-1.5">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Wipe All Stored Data
+                </button>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 overflow-hidden">
+                        <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white text-xs shrink-0" id="userAvatarBadge">
+                            ST
+                        </div>
+                        <div class="overflow-hidden">
+                            <div class="font-medium text-slate-200 truncate" id="userNameLabel">Set up profile</div>
+                            <button onclick="toggleUserRole()" id="userRoleSubtext" class="text-[10px] text-indigo-400 font-semibold hover:underline cursor-pointer block truncate" title="Toggle role">
+                                STUDENT
+                            </button>
+                        </div>
+                    </div>
+                    <button onclick="handleSignOutOrOpenAuth()" class="p-1.5 hover:text-white text-slate-400" title="Sign Out">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto custom-scrollbar">
+
+            <!-- Active Collision Banner -->
+            <div id="collisionBanner" class="hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 text-white px-4 py-2.5 text-xs sm:text-sm font-medium flex items-center justify-between shadow-md">
+                <div class="flex items-center gap-2 overflow-hidden">
+                    <span class="flex h-2 w-2 relative shrink-0">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                    </span>
+                    <span class="font-bold tracking-wide uppercase text-[11px] bg-red-900/50 px-2 py-0.5 rounded">High Collision Risk</span>
+                    <span class="truncate" id="collisionBannerText">Academic overload detected!</span>
+                </div>
+                <button onclick="triggerAiScheduleRebalance()" class="shrink-0 ml-3 underline hover:text-white/80 font-semibold cursor-pointer text-xs">
+                    Rebalance Load &rarr;
+                </button>
+            </div>
+
+            <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
+              <!-- ================= 1. DASHBOARD VIEW ================= -->
+                <section id="view-dashboard" class="view-panel space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Academic Pulse & Overview</h2>
+                            <p class="text-sm text-slate-500">Live workload status based on your timetable and deadlines</p>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <button onclick="triggerAiScheduleRebalance()" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition-all">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                <span>Rebalance Load</span>
+                            </button>
+                            <button onclick="switchView('importer')" class="inline-flex items-center gap-2 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 shadow-sm transition-all">
+                                <i data-lucide="upload" class="w-4 h-4 text-slate-500"></i>
+                                <span>Ingest Schedule</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4 Quick Metric Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+                            <div class="p-3 bg-red-50 text-red-600 rounded-xl">
+                                <i data-lucide="zap" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 font-medium">Active Collisions</div>
+                                <div class="text-xl font-bold text-slate-900 mt-0.5" id="metricCollisionCount">0 Detected</div>
+                                <span class="text-[11px] text-slate-400" id="metricCollisionSubtext">Schedule clear</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+                            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                                <i data-lucide="clock" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 font-medium">Today's Class Load</div>
+                                <div class="text-xl font-bold text-slate-900 mt-0.5" id="metricClassLoad">0 Classes</div>
+                                <span class="text-[11px] text-slate-500" id="metricCourseSummary">No active courses</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+                            <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                                <i data-lucide="flame" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 font-medium">Week Status</div>
+                                <div class="text-xl font-bold text-slate-900 mt-0.5" id="metricPeakLoad">Balanced</div>
+                                <span class="text-[11px] text-emerald-600 font-semibold" id="metricPeakPercent">Normal load</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+                            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                                <i data-lucide="award" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 font-medium">Projected GPA</div>
+                                <div class="text-xl font-bold text-slate-900 mt-0.5" id="metricGpa">-- <span class="text-xs text-slate-400 font-normal">/ 10</span></div>
+                                <span class="text-[11px] text-slate-400 font-semibold" id="metricCoursesCount">0 courses tracked</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clean Weekly Horizon -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-base">Weekly Schedule Pace</h3>
+                                    <p class="text-xs text-slate-500">Day-by-day workload density and upcoming academic checkpoints</p>
+                                </div>
+                                <button onclick="switchView('calendar')" class="text-xs text-indigo-600 font-bold hover:underline">
+                                    Open Full Calendar &rarr;
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3" id="weeklyPaceGrid"></div>
+
+                            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                                <span>🟢 Light (0-3h) • 🟡 Balanced (3-6h) • 🔴 Heavy/Exam (&gt;6h)</span>
+                                <span class="font-semibold text-slate-600">Dynamic Capacity Engine</span>
+                            </div>
+                        </div>
+
+                        <!-- Today's Schedule -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-slate-900 text-base">Today's Class Schedule</h3>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600" id="currentDayBadge">Wednesday</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-4">Extracted from your confirmed timetable</p>
+
+                            <div class="space-y-2.5 flex-1 overflow-y-auto max-h-60 custom-scrollbar pr-1" id="todaysClassesList"></div>
+
+                            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                                <span class="text-slate-500" id="totalClassHoursLabel">Total in-class: <strong>0.0 hrs</strong></span>
+                                <button onclick="switchView('importer')" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1">
+                                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Classes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tasks & Deadlines -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                        <i data-lucide="sparkles" class="w-4 h-4 text-indigo-600"></i>
+                                        Anticipatory Study Protection Plan
+                                    </h3>
+                                    <p class="text-xs text-slate-500">Scheduled study blocks</p>
+                                </div>
+                                <button onclick="addNewTaskPrompt()" class="text-xs font-semibold text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200">
+                                    + Add Task
+                                </button>
+                            </div>
+
+                            <div class="space-y-2" id="smartTodoList"></div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                    <i data-lucide="calendar-clock" class="w-4 h-4 text-amber-500"></i>
+                                    Critical Academic Deadlines & Festivals
+                                </h3>
+                                <button onclick="addNewDeadlinePrompt()" class="text-xs font-semibold text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200">
+                                    + Add Deadline
+                                </button>
+                            </div>
+
+                            <div class="space-y-3" id="deadlinesList"></div>
+                        </div>
+                    </div>
+                </section>
+                <!-- ================= 2. CALENDAR VIEW ================= -->
+                <section id="view-calendar" class="view-panel hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Calendar Workload Intensity</h2>
+                            <p class="text-sm text-slate-500">Lectures, Labs, Holidays, and Deadline Stress Indicators</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="changeCalendarMonth(-1)" class="p-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600" aria-label="Previous Month">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            </button>
+                            <span id="calendarCurrentMonthLabel" class="text-sm font-bold text-slate-800 px-3 py-1 bg-white rounded-lg border border-slate-200"></span>
+                            <button onclick="changeCalendarMonth(1)" class="p-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600" aria-label="Next Month">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <span class="font-bold text-slate-700">Workload Density Index:</span>
+                        <div class="flex flex-wrap items-center gap-4">
+                            <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-md bg-emerald-100 border border-emerald-300"></span> Light</span>
+                            <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-md bg-amber-100 border border-amber-300"></span> Moderate</span>
+                            <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-md bg-orange-100 border border-orange-300"></span> Heavy</span>
+                            <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-md bg-red-100 border border-red-400"></span> Collision Hazard</span>
+                            <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-md bg-blue-100 border border-blue-300"></span> Holiday</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="grid grid-cols-7 border-b border-slate-200 bg-slate-50/70 text-center py-2 text-xs font-bold text-slate-600">
+                            <div>SUN</div>
+                            <div>MON</div>
+                            <div>TUE</div>
+                            <div>WED</div>
+                            <div>THU</div>
+                            <div>FRI</div>
+                            <div id="satColHeader">SAT</div>
+                        </div>
+
+                        <div id="calendarGrid" class="grid grid-cols-7 divide-x divide-y divide-slate-100 min-h-[580px]"></div>
+                    </div>
+
+                    <div id="dayDetailCard" class="hidden bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                            <div class="flex items-center gap-3">
+                                <span id="detailDayBadge" class="text-xs px-2.5 py-1 rounded-md font-bold"></span>
+                                <h4 id="detailDateTitle" class="text-base font-bold text-slate-800"></h4>
+                            </div>
+                            <button onclick="closeDayDetail()" class="text-slate-400 hover:text-slate-700" aria-label="Close detail">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <div id="detailDayContent" class="space-y-3 text-xs sm:text-sm"></div>
+                    </div>
+                </section>
+
+                <!-- ================= 3. COLLISION DETECTOR ================= -->
+                <section id="view-collision" class="view-panel hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Predictive Collision Detection Engine</h2>
+                        <p class="text-sm text-slate-500">Flags intervals where assignments cluster around restricted preparation windows</p>
+                    </div>
+
+                    <div id="collisionBannerCard" class="bg-slate-100 rounded-2xl border border-slate-300 p-8 text-center text-slate-500 space-y-3">
+                        <i data-lucide="shield-check" class="w-12 h-12 mx-auto text-emerald-500"></i>
+                        <h3 class="text-lg font-bold text-slate-800">No Collisions Found</h3>
+                        <p class="text-xs max-w-md mx-auto">Your academic schedule currently has balanced workload distribution.</p>
+                    </div>
+                </section>
+
+                <!-- ================= 4. STUDY PLANNER ================= -->
+                <section id="view-planner" class="view-panel hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Adaptive Study Planner</h2>
+                            <p class="text-sm text-slate-500">Balances preparation blocks before exams and submissions</p>
+                        </div>
+                        <button onclick="triggerAiScheduleRebalance()" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            <span>Re-Generate Plan</span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="studyPlannerDaysGrid"></div>
+                </section>
+
+                <!-- ================= 5. FOCUS POMODORO ================= -->
+                <section id="view-focus" class="view-panel hidden space-y-6">
+                    <div class="max-w-2xl mx-auto text-center space-y-2">
+                        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Course-Integrated Focus Pomodoro</h2>
+                        <p class="text-sm text-slate-500">Study sessions directly connected to your enrolled curriculum</p>
+                    </div>
+
+                    <div class="max-w-xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-sm text-center space-y-6">
+                        <div class="inline-flex p-1 bg-slate-100 rounded-2xl text-xs font-semibold text-slate-600">
+                            <button onclick="setFocusMode(25, 'Pomodoro')" id="btn-mode-25" class="px-4 py-1.5 rounded-xl bg-white shadow-sm text-indigo-600">25m Focus</button>
+                            <button onclick="setFocusMode(5, 'Short Break')" id="btn-mode-5" class="px-4 py-1.5 rounded-xl hover:text-slate-900">5m Short Break</button>
+                            <button onclick="setFocusMode(50, 'Deep Sprint')" id="btn-mode-50" class="px-4 py-1.5 rounded-xl hover:text-slate-900">50m Deep Sprint</button>
+                        </div>
+
+                        <div class="flex items-center justify-center gap-2">
+                            <span class="text-xs text-slate-400 font-medium">Tied to Course:</span>
+                            <select id="focusCourseSelect" class="text-xs font-bold bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-800 focus:ring-2 focus:ring-indigo-500">
+                                <option value="GENERAL">General Study</option>
+                            </select>
+                        </div>
+
+                        <div class="relative py-6">
+                            <div class="text-7xl sm:text-8xl font-black text-slate-900 tracking-tight font-mono" id="timerDisplay">25:00</div>
+                            <div class="text-xs font-semibold uppercase tracking-wider text-indigo-500 mt-2" id="timerLabel">Pomodoro Focus Session</div>
+                        </div>
+
+                        <div class="flex items-center justify-center gap-4">
+                            <button onclick="toggleTimer()" id="timerStartBtn" class="px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-base shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+                                <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+                                <span id="timerBtnText">Start Focus</span>
+                            </button>
+                            <button onclick="resetTimer()" class="p-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 active:scale-95 transition-all" title="Reset Timer">
+                                <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+
+                        <div class="pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="volume-2" class="w-4 h-4 text-slate-400"></i>
+                                <span>Chime Enabled</span>
+                            </div>
+                            <div class="font-medium text-slate-700">
+                                Completed Today: <strong id="completedSessionsCount" class="text-indigo-600">0</strong> sessions
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================= 6. COURSES & GPA TRACKER ================= -->
+                <section id="view-courses" class="view-panel hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Enrolled Courses & GPA Projector</h2>
+                            <p class="text-sm text-slate-500">Course credits weight your collision severity</p>
+                        </div>
+                        <button onclick="addNewCoursePrompt()" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Add Course</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+                        <div class="space-y-1 text-center sm:text-left">
+                            <span class="text-xs uppercase font-bold tracking-widest text-indigo-300">Weighted Semester GPA</span>
+                            <div class="text-4xl font-extrabold" id="calculatedGpaDisplay">0.00 <span class="text-lg font-normal text-indigo-300">/ 10.0</span></div>
+                            <p class="text-xs text-slate-300" id="gpaCourseBreakdownText">Total Credits: 0</p>
+                        </div>
+
+                        <div class="bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 text-xs space-y-1.5">
+                            <div class="flex justify-between gap-6">
+                                <span class="text-slate-300">Enrolled Courses:</span>
+                                <span class="font-bold" id="gpaEnrolledCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                            <h3 class="font-bold text-slate-800 text-sm">Active Curriculum Courses</h3>
+                            <span class="text-xs text-slate-500">Delete or update marks inline</span>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs sm:text-sm">
+                                <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200 text-[11px]">
+                                    <tr>
+                                        <th class="py-3 px-4">Code</th>
+                                        <th class="py-3 px-4">Course Name</th>
+                                        <th class="py-3 px-4 text-center">Credits</th>
+                                        <th class="py-3 px-4 text-center">Lec/Week</th>
+                                        <th class="py-3 px-4 text-center">Lab/Week</th>
+                                        <th class="py-3 px-4">Current Marks</th>
+                                        <th class="py-3 px-4 text-center">Grade Point</th>
+                                        <th class="py-3 px-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="coursesTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <!-- ================= 7. DATA INGESTION & EDITABLE VERIFICATION ================= -->
+                <section id="view-importer" class="view-panel hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Smart Data Ingestion & Verification Hub</h2>
+                        <p class="text-sm text-slate-500">Upload your timetable image or PDF. Multimodal AI directly reads courses, contact hours, exams, and institutional holidays.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white rounded-2xl border-2 border-dashed border-indigo-200 hover:border-indigo-400 p-8 text-center transition-all flex flex-col items-center justify-center group cursor-pointer" onclick="document.getElementById('fileUploadInput').click()">
+                            <input type="file" id="fileUploadInput" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.csv,.xlsx,.txt,.json" onchange="handleFileUpload(event)">
+                            <div class="w-14 h-14 rounded-2xl bg-indigo-50 group-hover:bg-indigo-100 text-indigo-600 flex items-center justify-center mb-4 transition-colors">
+                                <i data-lucide="upload-cloud" class="w-7 h-7"></i>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-base mb-1">Upload Timetable, Academic Calendar, or Exam Schedule</h3>
+                            <p class="text-xs text-slate-500 max-w-md mb-2">Multimodal extraction automatically identifies courses, lecture blocks, exams, and holidays.</p>
+                            <span id="ocrStatusBadge" class="hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 animate-pulse">
+                                <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Processing with Multimodal Vision Engine...
+                            </span>
+                            <button type="button" class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700">
+                                Browse Image or PDF
+                            </button>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+                            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                                <i data-lucide="sliders" class="w-4 h-4 text-indigo-600"></i>
+                                Configuration Parameters
+                            </h3>
+
+                            <div class="space-y-3 text-xs">
+                                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                    <label class="font-bold text-slate-800 block mb-1">Holiday on Saturday?</label>
+                                    <select id="satSelectRule" onchange="updateSaturdayRule(this.value)" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-medium text-slate-700">
+                                        <option value="alternate">Alternate Saturdays Off</option>
+                                        <option value="all_off">All Saturdays Off</option>
+                                        <option value="all_working">All Saturdays Working</option>
+                                    </select>
+                                </div>
+
+                                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                                    <label class="font-bold text-slate-800 block">AI Vision API Key (Optional)</label>
+                                    <p class="text-slate-400 text-[11px]">Free Google AI Studio key enables direct vision extraction on complex tables.</p>
+                                    <input type="password" id="geminiApiKeyInput" onchange="saveGeminiApiKey(this.value)" placeholder="AIzaSy..." class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono text-[11px] text-slate-800">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Verification Review Box -->
+                    <div class="bg-white rounded-2xl border-2 border-indigo-100 shadow-sm p-6 space-y-5">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">Step 2: Verification Review</span>
+                                    <h3 class="font-bold text-slate-900 text-base">Verify Extracted Data</h3>
+                                </div>
+                                <p class="text-xs text-amber-700 font-medium mt-0.5">
+                                    Review the automatically extracted courses and schedule events below. You can edit any field before saving to the cloud.
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="loadActiveCoursesIntoDraft()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5" title="Pull saved courses back to edit">
+                                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Pull Saved Courses
+                                </button>
+                                <button onclick="addReviewItemRow()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
+                                    + Add Course Row
+                                </button>
+                                <button onclick="commitParsedSchedule()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
+                                    <i data-lucide="check" class="w-4 h-4"></i> Confirm & Sync Database
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 1. Extracted Courses -->
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-bold uppercase text-slate-400 tracking-wider">1. Extracted Curriculum Courses</h4>
+                            <div id="parsedCoursesEditableList" class="space-y-2"></div>
+                        </div>
+
+                        <!-- 2. Extracted Timetable -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold uppercase text-slate-400 tracking-wider">2. Extracted Timetable</h4>
+                                <button onclick="addReviewTimetableRow()" class="text-xs text-indigo-600 font-semibold hover:underline">+ Add Timetable Row</button>
+                            </div>
+                            <div id="parsedTimetableEditableList" class="space-y-2"></div>
+                        </div>
+
+                        <!-- 3. Extracted Deadlines, Exams & Holidays -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold uppercase text-slate-400 tracking-wider">3. Extracted Deadlines, Exams & Calendar Holidays</h4>
+                                <button onclick="addReviewEventRow()" class="text-xs text-indigo-600 font-semibold hover:underline">+ Add Event Row</button>
+                            </div>
+                            <div id="parsedEventsEditableList" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================= PROFILE / SEMESTER ================= -->
+                <section id="view-profile" class="view-panel hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Profile & Semester</h2>
+                        <p class="text-sm text-slate-500">Your academic settings are user-controlled and feed the workload forecast.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label class="text-xs font-semibold text-slate-600">Name<input id="profileNameInput" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="Your name"></label>
+                            <label class="text-xs font-semibold text-slate-600">Department / Branch<input id="profileDepartmentInput" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="Your department"></label>
+                            <label class="text-xs font-semibold text-slate-600">Semester<input id="profileSemesterInput" type="number" min="1" max="12" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="Semester"></label>
+                            <label class="text-xs font-semibold text-slate-600">Available study hours / day<input id="profileStudyHoursInput" type="number" min="0" max="24" step="0.5" class="mt-1 w-full border rounded-xl px-3 py-2" placeholder="e.g. 3"></label>
+                            <label class="text-xs font-semibold text-slate-600">Saturday policy<select id="profileSaturdayInput" class="mt-1 w-full border rounded-xl px-3 py-2">
+                                <option value="">Choose from your institution</option>
+                                <option value="all_off">All Saturdays Off</option>
+                                <option value="alternate">Alternate Saturdays Off</option>
+                                <option value="all_working">All Saturdays Working</option>
+                            </select></label>
+                        </div>
+                        <button onclick="saveUserProfile()" class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold">Save Academic Profile</button>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-2">
+                        <h3 class="font-bold text-amber-900">Start a new semester</h3>
+                        <p class="text-xs text-amber-800">The current semester will be archived locally before active courses, timetable, deadlines and tasks are cleared.</p>
+                        <button onclick="startNewSemester()" class="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold">Create New Semester</button>
+                    </div>
+                </section>
+
+                <!-- ================= 8. ADMIN DIRECTORY VIEW ================= -->
+                <section id="view-admin" class="view-panel hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Administrator Control & User Directory</h2>
+                        <p class="text-sm text-slate-500">Monitor student cohorts and cloud registration records</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-xs text-slate-400 font-semibold block">Total Cloud Users</span>
+                            <span class="text-2xl font-black text-slate-900" id="adminTotalUsers">0</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-xs text-slate-400 font-semibold block">Active Courses Enrolled</span>
+                            <span class="text-2xl font-black text-indigo-600" id="adminTotalCourses">0</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-xs font-bold text-emerald-600 inline-flex items-center gap-1 mt-2">
+                                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Connected
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                            <h3 class="font-bold text-slate-800 text-sm">Registered Accounts</h3>
+                            <button onclick="fetchAdminDirectory()" class="text-xs font-semibold text-indigo-600 hover:underline flex items-center gap-1">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Directory
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs sm:text-sm">
+                                <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200 text-[11px]">
+                                    <tr>
+                                        <th class="py-3 px-4">Email</th>
+                                        <th class="py-3 px-4">Name</th>
+                                        <th class="py-3 px-4">Branch</th>
+                                        <th class="py-3 px-4 text-center">Semester</th>
+                                        <th class="py-3 px-4 text-center">Role</th>
+                                        <th class="py-3 px-4">Joined</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminUserTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+                                                                                                             
+        </main>
+      <!-- ================= MODERN TASK MODAL ================= -->
+        <div id="taskModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h3 id="taskModalTitle" class="text-base font-bold text-slate-900">Add Study Task</h3>
+                            <p class="text-[11px] text-slate-400">Schedule focused study chunks</p>
+                        </div>
+                    </div>
+                    <button onclick="closeTaskModal()" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <form id="taskModalForm" onsubmit="handleTaskModalSubmit(event)" class="space-y-4 text-xs">
+                    <input type="hidden" id="taskEditId">
+
+                    <div class="space-y-1">
+                        <label class="font-bold text-slate-700">What are you working on?</label>
+                        <input type="text" id="taskTitleInput" required placeholder="e.g., Read Module 3, Complete Lab Writeup" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="font-bold text-slate-700">Course</label>
+                            <select id="taskCourseSelect" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="font-bold text-slate-700">Estimated Effort</label>
+                            <div class="relative">
+                                <input type="number" id="taskDurationInput" step="0.5" min="0.5" max="12" required value="1.5" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
+                                <span class="absolute right-3 top-2.5 text-slate-400 font-bold text-[11px]">hrs</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="font-bold text-slate-700">Scheduled Date</label>
+                        <input type="date" id="taskDateInput" required class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 font-mono text-xs focus:ring-2 focus:ring-indigo-500">
+                        <div class="flex items-center gap-1.5 pt-1">
+                            <span class="text-[10px] text-slate-400 font-semibold mr-1">Quick set:</span>
+                            <button type="button" onclick="setQuickDate('taskDateInput', 0)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-[10px] font-bold text-slate-600 transition">Today</button>
+                            <button type="button" onclick="setQuickDate('taskDateInput', 1)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-[10px] font-bold text-slate-600 transition">Tomorrow</button>
+                            <button type="button" onclick="setQuickDate('taskDateInput', 7)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-[10px] font-bold text-slate-600 transition">+1 Week</button>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                        <button type="button" onclick="closeTaskModal()" class="px-4 py-2 rounded-xl text-slate-500 hover:bg-slate-100 font-semibold transition">Cancel</button>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-500/20 transition active:scale-95">Save Task</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= MODERN DEADLINE MODAL ================= -->
+        <div id="deadlineModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                            <i data-lucide="calendar-clock" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h3 id="deadlineModalTitle" class="text-base font-bold text-slate-900">Add Deadline or Exam</h3>
+                            <p class="text-[11px] text-slate-400">Track milestones and collision risks</p>
+                        </div>
+                    </div>
+                    <button onclick="closeDeadlineModal()" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <form id="deadlineModalForm" onsubmit="handleDeadlineModalSubmit(event)" class="space-y-4 text-xs">
+                    <input type="hidden" id="deadlineEditId">
+
+                    <div class="space-y-1">
+                        <label class="font-bold text-slate-700">Milestone Title</label>
+                        <input type="text" id="deadlineTitleInput" required placeholder="e.g., Discrete Math Midterm, OOP Mini Project Viva" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="font-bold text-slate-700">Course</label>
+                            <select id="deadlineCourseSelect" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="font-bold text-slate-700">Type</label>
+                            <select id="deadlineTypeSelect" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
+                                <option value="Assignment">Assignment</option>
+                                <option value="Exam">Exam / Midterm</option>
+                                <option value="Lab Submission">Lab Submission</option>
+                                <option value="Quiz / Viva">Quiz / Viva</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1.5">
+                            <label class="font-bold text-slate-700">Due Date</label>
+                            <input type="date" id="deadlineDateInput" required class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 font-mono text-xs focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="font-bold text-slate-700">Prep Effort Load</label>
+                            <div class="relative">
+                                <input type="number" id="deadlineIntensityInput" step="0.5" min="1" max="24" required value="4.0" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
+                                <span class="absolute right-3 top-2 text-slate-400 font-bold text-[11px]">hrs</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 pt-0.5">
+                        <span class="text-[10px] text-slate-400 font-semibold mr-1">Quick date:</span>
+                        <button type="button" onclick="setQuickDate('deadlineDateInput', 2)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-[10px] font-bold text-slate-600 transition">In 2 Days</button>
+                        <button type="button" onclick="setQuickDate('deadlineDateInput', 7)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-[10px] font-bold text-slate-600 transition">In 1 Week</button>
+                        <button type="button" onclick="setQuickDate('deadlineDateInput', 14)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-[10px] font-bold text-slate-600 transition">In 2 Weeks</button>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                        <button type="button" onclick="closeDeadlineModal()" class="px-4 py-2 rounded-xl text-slate-500 hover:bg-slate-100 font-semibold transition">Cancel</button>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-md shadow-amber-500/20 transition active:scale-95">Save Deadline</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl text-xs sm:text-sm font-medium flex items-center gap-3 border border-slate-800">
+            <i data-lucide="info" class="w-4 h-4 text-indigo-400" id="toastIcon"></i>
+            <span id="toastMessage">Action completed</span>
+        </div>
+
+        <script src="app.js"></script>
+    </body>
 </html>
+                                                                                                             
