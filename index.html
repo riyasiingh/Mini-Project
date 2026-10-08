@@ -929,6 +929,149 @@ nter gap-3 border border-slate-800">
 <i data-lucide="info" class="w-4 h-4 text-indigo-400" id="toastIcon"></i>
 <span id="toastMessage">Action completed</span>
 </div>
+  <!-- ================= MODERN TASK MODAL ================= -->
+<div id="taskModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-5 transform transition-all">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <h3 id="taskModalTitle" class="text-base font-bold text-slate-900">Add Study Task</h3>
+                    <p class="text-[11px] text-slate-400">Schedule focused study chunks</p>
+                </div>
+            </div>
+            <button onclick="closeTaskModal()" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form id="taskModalForm" onsubmit="handleTaskModalSubmit(event)" class="space-y-4 text-xs">
+            <input type="hidden" id="taskEditId">
+
+            <div class="space-y-1">
+                <label class="font-bold text-slate-700">What are you working on?</label>
+                <input type="text" id="taskTitleInput" required placeholder="e.g., Read Module 3, Complete Lab Writeup"
+                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="font-bold text-slate-700">Course</label>
+                    <select id="taskCourseSelect" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label class="font-bold text-slate-700">Estimated Effort</label>
+                    <div class="relative">
+                        <input type="number" id="taskDurationInput" step="0.5" min="0.5" max="12" required value="1.5"
+                            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
+                        <span class="absolute right-3 top-2.5 text-slate-400 font-bold text-[11px]">hrs</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="font-bold text-slate-700">Scheduled Date</label>
+                <input type="date" id="taskDateInput" required
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 font-mono text-xs focus:ring-2 focus:ring-indigo-500">
+                
+                <!-- Quick Date Chips -->
+                <div class="flex items-center gap-1.5 pt-1">
+                    <span class="text-[10px] text-slate-400 font-semibold mr-1">Quick set:</span>
+                    <button type="button" onclick="setQuickDate('taskDateInput', 0)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-[10px] font-bold text-slate-600 transition">Today</button>
+                    <button type="button" onclick="setQuickDate('taskDateInput', 1)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-[10px] font-bold text-slate-600 transition">Tomorrow</button>
+                    <button type="button" onclick="setQuickDate('taskDateInput', 7)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-[10px] font-bold text-slate-600 transition">+1 Week</button>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeTaskModal()" class="px-4 py-2 rounded-xl text-slate-500 hover:bg-slate-100 font-semibold transition">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-500/20 transition active:scale-95">Save Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================= MODERN DEADLINE MODAL ================= -->
+<div id="deadlineModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-5 transform transition-all">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                    <i data-lucide="calendar-clock" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <h3 id="deadlineModalTitle" class="text-base font-bold text-slate-900">Add Deadline or Exam</h3>
+                    <p class="text-[11px] text-slate-400">Track milestones and collision risks</p>
+                </div>
+            </div>
+            <button onclick="closeDeadlineModal()" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form id="deadlineModalForm" onsubmit="handleDeadlineModalSubmit(event)" class="space-y-4 text-xs">
+            <input type="hidden" id="deadlineEditId">
+
+            <div class="space-y-1">
+                <label class="font-bold text-slate-700">Milestone Title</label>
+                <input type="text" id="deadlineTitleInput" required placeholder="e.g., Discrete Math Midterm, OOP Mini Project Viva"
+                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="font-bold text-slate-700">Course</label>
+                    <select id="deadlineCourseSelect" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label class="font-bold text-slate-700">Type</label>
+                    <select id="deadlineTypeSelect" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
+                        <option value="Assignment">Assignment</option>
+                        <option value="Exam">Exam / Midterm</option>
+                        <option value="Lab Submission">Lab Submission</option>
+                        <option value="Quiz / Viva">Quiz / Viva</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1.5">
+                    <label class="font-bold text-slate-700">Due Date</label>
+                    <input type="date" id="deadlineDateInput" required
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 font-mono text-xs focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="font-bold text-slate-700">Prep Effort Load</label>
+                    <div class="relative">
+                        <input type="number" id="deadlineIntensityInput" step="0.5" min="1" max="24" required value="4.0"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 font-medium focus:ring-2 focus:ring-indigo-500">
+                        <span class="absolute right-3 top-2 text-slate-400 font-bold text-[11px]">hrs</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Date Presets -->
+            <div class="flex items-center gap-1.5 pt-0.5">
+                <span class="text-[10px] text-slate-400 font-semibold mr-1">Quick date:</span>
+                <button type="button" onclick="setQuickDate('deadlineDateInput', 2)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-[10px] font-bold text-slate-600 transition">In 2 Days</button>
+                <button type="button" onclick="setQuickDate('deadlineDateInput', 7)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-[10px] font-bold text-slate-600 transition">In 1 Week</button>
+                <button type="button" onclick="setQuickDate('deadlineDateInput', 14)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-[10px] font-bold text-slate-600 transition">In 2 Weeks</button>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeDeadlineModal()" class="px-4 py-2 rounded-xl text-slate-500 hover:bg-slate-100 font-semibold transition">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-md shadow-amber-500/20 transition active:scale-95">Save Deadline</button>
+            </div>
+        </form>
+    </div>
+</div>
 <script src="app.js"></script>
 </body>
 </html>
