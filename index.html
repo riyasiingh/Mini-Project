@@ -168,7 +168,7 @@
 
             <button onclick="switchView('courses')" id="nav-courses" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-800 text-slate-300">
                 <i data-lucide="graduation-cap" class="w-4 h-4"></i>
-                <span>Courses & GPA</span>
+                <span>Courses &amp; GPA</span>
             </button>
 
             <div class="pt-3 pb-1 px-3">
@@ -177,7 +177,7 @@
 
             <button onclick="switchView('importer')" id="nav-importer" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-800 text-slate-300 border border-slate-700/50 bg-slate-800/40">
                 <i data-lucide="file-up" class="w-4 h-4 text-emerald-400"></i>
-                <span>Upload & Verify Schedule</span>
+                <span>Upload &amp; Verify Schedule</span>
             </button>
 
             <!-- Admin Tab (Visible only to verified admin accounts) -->
@@ -234,7 +234,7 @@
             <section id="view-dashboard" class="view-panel space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Academic Pulse & Overview</h2>
+                        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Academic Pulse &amp; Overview</h2>
                         <p class="text-sm text-slate-500">Live workload status based on your timetable and deadlines</p>
                     </div>
                     <div class="flex items-center gap-2.5">
@@ -680,10 +680,20 @@
                     </div>
                     <button onclick="saveUserProfile()" class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold">Save Academic Profile</button>
                 </div>
+
                 <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-2">
                     <h3 class="font-bold text-amber-900">Start a new semester</h3>
                     <p class="text-xs text-amber-800">The current semester will be archived locally before active courses, timetable, deadlines and tasks are cleared.</p>
                     <button onclick="startNewSemester()" class="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold">Create New Semester</button>
+                </div>
+
+                <!-- Restore Archived Semester Card -->
+                <div id="archivedSemestersCard" class="hidden bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-sm">Restore Previous Semester</h3>
+                        <p class="text-xs text-slate-500">Accidentally started a new semester? Restore an archived semester snapshot along with its courses, timetable, and deadlines.</p>
+                    </div>
+                    <div id="archivedSemestersList" class="space-y-2"></div>
                 </div>
             </section>
 
