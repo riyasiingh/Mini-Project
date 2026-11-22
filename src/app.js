@@ -1,6 +1,6 @@
 /* =====================================================================
    SYNAPSELOAD CENTRAL ENGINE (app.js)
-   User-driven academic data + verified extraction
+   User-driven academic data + verified extraction + semester archiving
    ===================================================================== */
 
 const firebaseConfig = {
@@ -688,7 +688,7 @@ function updateSaturdayRule(val) {
 }
 
 /* ================================================================
-   PROFILE & SEMESTER
+   PROFILE, SEMESTER & ARCHIVE RESTORE
    ================================================================ */
 
 function populateProfileView() {
@@ -707,6 +707,8 @@ function populateProfileView() {
 	setValue("profileSemesterInput", p.semester);
 	setValue("profileStudyHoursInput", p.dailyStudyHours);
 	setValue("profileSaturdayInput", p.saturdayRule);
+
+	renderArchivedSemesters();
 }
 
 async function saveUserProfile() {
@@ -756,6 +758,8 @@ async function saveUserProfile() {
 		}
 	}
 
+	localStorage.setItem("synapse_profile", JSON.stringify(appData.userProfile));
+
 	updateUserDisplayUI();
 	renderCalendar();
 	refreshDashboard();
@@ -795,10 +799,134 @@ async function startNewSemester() {
 
 	populateProfileView();
 	updateUserDisplayUI();
+	syncAllToFirestore();
 
 	showToast(
-		`Semester ${appData.userProfile.semester} created. Add your new semester data.`,
+		`Semester ${appData.userProfile.semester} created. Add your new semester data or restore the previous one below.`,
 	);
+}
+
+function renderArchivedSemesters() {
+	const card = document.getElementById("archivedSemestersCard");
+	const list = document.getElementById("archivedSemestersList");
+	if (!card || !list) return;
+
+	const archives = [];
+	for (let i = 0; i < localStorage.length; i++) {
+		const key = localStorage.key(i);
+		if (key && key.startsWith("synapse_archive_")) {
+			try {
+				const parsed = JSON.parse(localStorage.getItem(key));
+				if (parsed && parsed.profile) {
+					archives.push({ key, ...parsed });
+				}
+			} catch (e) {
+				console.warn("Invalid archive entry:", key);
+			}
+		}
+	}
+
+	archives.sort((a, b) => new Date(b.archivedAt) - new Date(a.archivedAt));
+
+	if (archives.length === 0) {
+		card.classList.add("hidden");
+		return;
+	}
+
+	card.classList.remove("hidden");
+	list.innerHTML = "";
+
+	archives.forEach((arch) => {
+		const semLabel = arch.profile.semester
+			? `Semester ${arch.profile.semester}`
+			: "Previous Semester";
+		const courseCount = Array.isArray(arch.courses) ? arch.courses.length : 0;
+		const dateText = arch.archivedAt
+			? new Date(arch.archivedAt).toLocaleString()
+			: "";
+
+		const row = document.createElement("div");
+		row.className =
+			"p-3 rounded-xl border border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs";
+		row.innerHTML = `
+			<div>
+				<div class="font-bold text-slate-800">${escapeHtml(semLabel)} (${courseCount} courses)</div>
+				<div class="text-[11px] text-slate-500">Archived on ${escapeHtml(dateText)}</div>
+			</div>
+			<div class="flex items-center gap-2">
+				<button type="button" onclick="restoreArchivedSemester('${escapeHtml(arch.key)}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition">
+					Restore Semester
+				</button>
+				<button type="button" onclick="deleteArchivedSemester('${escapeHtml(arch.key)}')" class="px-2.5 py-1.5 bg-slate-200 hover:bg-red-100 hover:text-red-600 text-slate-600 rounded-lg font-semibold transition">
+					Delete
+				</button>
+			</div>
+		`;
+		list.appendChild(row);
+	});
+}
+
+async function restoreArchivedSemester(archiveKey) {
+	const raw = localStorage.getItem(archiveKey);
+	if (!raw) {
+		showToast("Archive snapshot not found.", true);
+		return;
+	}
+
+	if (
+		!confirm(
+			"Restore this archived semester? Your current active courses, deadlines, and tasks will be replaced with the saved snapshot.",
+		)
+	) {
+		return;
+	}
+
+	try {
+		const archive = JSON.parse(raw);
+
+		// Restore profile settings (including previous semester number, study hours, Saturday rule)
+		appData.userProfile = {
+			...appData.userProfile,
+			...archive.profile,
+		};
+
+		// Restore academic records
+		appData.courses = Array.isArray(archive.courses) ? archive.courses : [];
+		appData.timetable = archive.timetable || {};
+		appData.deadlines = Array.isArray(archive.deadlines)
+			? archive.deadlines
+			: [];
+		appData.tasks = Array.isArray(archive.tasks) ? archive.tasks : [];
+
+		// Sync restored profile and records to Firestore & localStorage
+		if (isFirebaseReady && auth && auth.currentUser) {
+			await db
+				.collection("users")
+				.doc(auth.currentUser.uid)
+				.set(appData.userProfile, { merge: true });
+		}
+
+		await syncAllToFirestore();
+
+		populateProfileView();
+		updateUserDisplayUI();
+		refreshDashboard();
+		renderCalendar();
+
+		showToast(
+			`Restored Semester ${appData.userProfile.semester} successfully!`,
+		);
+	} catch (e) {
+		console.error("Failed to restore semester:", e);
+		showToast("Could not restore archived semester.", true);
+	}
+}
+
+function deleteArchivedSemester(archiveKey) {
+	if (!confirm("Permanently delete this archived snapshot?")) return;
+	localStorage.removeItem(archiveKey);
+	renderArchivedSemesters();
+	showToast("Archive removed.");
 }
 
 /* ================================================================
@@ -1227,7 +1355,8 @@ function handleTaskModalSubmit(e) {
 	const editId = document.getElementById("taskEditId")?.value;
 	const title = document.getElementById("taskTitleInput")?.value.trim();
 	const course = document.getElementById("taskCourseSelect")?.value || "GENERAL";
-	const hours = parseFloat(document.getElementById("taskDurationInput")?.value) || 1.0;
+	const hours =
+		parseFloat(document.getElementById("taskDurationInput")?.value) || 1.0;
 	const rawDate = document.getElementById("taskDateInput")?.value;
 
 	if (!title) {
@@ -1421,7 +1550,8 @@ function editDeadlinePrompt(deadlineId) {
 	if (editId) editId.value = deadline.id;
 	if (titleInput) titleInput.value = deadline.title || "";
 	if (typeSelect) typeSelect.value = deadline.type || "Assignment";
-	if (intensityInput) intensityInput.value = parseHours(deadline.intensity) || 4.0;
+	if (intensityInput)
+		intensityInput.value = parseHours(deadline.intensity) || 4.0;
 	if (dateInput) dateInput.value = deadline.date || "";
 
 	populateCourseDropdown("deadlineCourseSelect", deadline.course);
@@ -1437,9 +1567,12 @@ function handleDeadlineModalSubmit(e) {
 	e.preventDefault();
 	const editId = document.getElementById("deadlineEditId")?.value;
 	const title = document.getElementById("deadlineTitleInput")?.value.trim();
-	const course = document.getElementById("deadlineCourseSelect")?.value || "GENERAL";
-	const type = document.getElementById("deadlineTypeSelect")?.value || "Assignment";
-	const hours = parseFloat(document.getElementById("deadlineIntensityInput")?.value) || 3.0;
+	const course =
+		document.getElementById("deadlineCourseSelect")?.value || "GENERAL";
+	const type =
+		document.getElementById("deadlineTypeSelect")?.value || "Assignment";
+	const hours =
+		parseFloat(document.getElementById("deadlineIntensityInput")?.value) || 3.0;
 	const rawDate = document.getElementById("deadlineDateInput")?.value.trim();
 
 	if (!title) {
@@ -1453,7 +1586,9 @@ function handleDeadlineModalSubmit(e) {
 	}
 
 	if (editId) {
-		const deadline = appData.deadlines.find((d) => String(d.id) === String(editId));
+		const deadline = appData.deadlines.find(
+			(d) => String(d.id) === String(editId),
+		);
 		if (deadline) {
 			deadline.title = title;
 			deadline.course = course;
@@ -1676,7 +1811,9 @@ function normaliseTime(value) {
 
 function validateExtractedData(parsed) {
 	const coursesInput = Array.isArray(parsed?.courses) ? parsed.courses : [];
-	const timetableInput = Array.isArray(parsed?.timetable) ? parsed.timetable : [];
+	const timetableInput = Array.isArray(parsed?.timetable)
+		? parsed.timetable
+		: [];
 	const eventsInput = Array.isArray(parsed?.events) ? parsed.events : [];
 
 	const courseCodes = new Set();
