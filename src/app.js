@@ -2114,32 +2114,47 @@ function renderParsedEditableReview() {
 
 	appData.reviewDraft.forEach((c, index) => {
 		const row = document.createElement("div");
+		row.draggable = true;
+		row.dataset.index = index;
 		row.className =
-			"flex flex-col sm:flex-row gap-3 p-3 bg-white rounded-xl border";
+			"flex flex-col sm:flex-row items-center gap-2.5 p-3 bg-white rounded-xl border border-slate-200 transition-all";
+
+		row.addEventListener("dragstart", (e) => handleCourseDragStart(e, index, "draft"));
+		row.addEventListener("dragover", handleCourseDragOver);
+		row.addEventListener("dragleave", handleCourseDragLeave);
+		row.addEventListener("drop", (e) => handleCourseDrop(e, index, "draft"));
+		row.addEventListener("dragend", handleCourseDragEnd);
 
 		row.innerHTML = `
+				<div
+					class="p-1.5 text-slate-400 hover:text-indigo-600 cursor-grab active:cursor-grabbing shrink-0"
+					title="Drag to reorder"
+				>
+					<i data-lucide="grip-vertical" class="w-4 h-4"></i>
+				</div>
 				<input
 					value="${escapeHtml(c.code || "")}"
 					onchange="updateDraftField(${index}, 'code', this.value)"
 					placeholder="Course code"
-					class="border rounded px-2 py-1"
+					class="border rounded-lg px-2.5 py-1.5 text-xs w-full sm:w-32 font-mono uppercase"
 				>
 				<input
 					value="${escapeHtml(c.name || "")}"
 					onchange="updateDraftField(${index}, 'name', this.value)"
 					placeholder="Course name"
-					class="border rounded px-2 py-1 flex-1"
+					class="border rounded-lg px-2.5 py-1.5 text-xs flex-1 w-full"
 				>
 				<input
 					type="number"
 					value="${c.credits ?? ""}"
 					onchange="updateDraftField(${index}, 'credits', this.value === '' ? null : Number(this.value))"
 					placeholder="Credits"
-					class="border rounded px-2 py-1 w-24"
+					class="border rounded-lg px-2.5 py-1.5 text-xs w-full sm:w-24"
 				>
 				<button
+					type="button"
 					onclick="removeDraftRow(${index})"
-					class="text-red-500"
+					class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1"
 				>
 					Remove
 				</button>
@@ -2329,6 +2344,50 @@ function removeDraftRow(index) {
 	renderParsedEditableReview();
 }
 
+let draggedCourseState = { index: null, listType: null };
+
+function handleCourseDragStart(e, index, listType) {
+	draggedCourseState = { index, listType };
+	e.dataTransfer.effectAllowed = "move";
+	e.currentTarget.classList.add("opacity-50", "border-indigo-400");
+}
+
+function handleCourseDragOver(e) {
+	e.preventDefault();
+	e.dataTransfer.dropEffect = "move";
+	e.currentTarget.classList.add("border-t-2", "border-t-indigo-500", "bg-indigo-50/30");
+}
+
+function handleCourseDragLeave(e) {
+	e.currentTarget.classList.remove("border-t-2", "border-t-indigo-500", "bg-indigo-50/30");
+}
+
+function handleCourseDragEnd(e) {
+	e.currentTarget.classList.remove("opacity-50", "border-indigo-400", "border-t-2", "border-t-indigo-500", "bg-indigo-50/30");
+}
+
+function handleCourseDrop(e, targetIndex, listType) {
+	e.preventDefault();
+	e.currentTarget.classList.remove("border-t-2", "border-t-indigo-500", "bg-indigo-50/30");
+
+	const { index: fromIndex, listType: fromList } = draggedCourseState;
+	if (fromIndex === null || fromList !== listType || fromIndex === targetIndex) return;
+
+	if (listType === "draft") {
+		const [movedItem] = appData.reviewDraft.splice(fromIndex, 1);
+		appData.reviewDraft.splice(targetIndex, 0, movedItem);
+		renderParsedEditableReview();
+	} else if (listType === "saved") {
+		const [movedItem] = appData.courses.splice(fromIndex, 1);
+		appData.courses.splice(targetIndex, 0, movedItem);
+		localStorage.setItem("synapse_courses", JSON.stringify(appData.courses));
+		renderCoursesTable();
+		updateFocusCourseSelect();
+	}
+
+	draggedCourseState = { index: null, listType: null };
+}
+
 function removeDraftEventRow(index) {
 	appData.reviewEventsDraft?.splice(index, 1);
 	renderParsedEditableReview();
@@ -2474,7 +2533,7 @@ function renderCoursesTable() {
 	let totalCredits = 0;
 	let totalGradePoints = 0;
 
-	appData.courses.forEach((c) => {
+	appData.courses.forEach((c, index) => {
 		const credits = Number(c.credits) || 0;
 		const gradePoint = Number(c.gradePoint) || 0;
 
@@ -2482,11 +2541,23 @@ function renderCoursesTable() {
 		totalGradePoints += credits * gradePoint;
 
 		const tr = document.createElement("tr");
+		tr.draggable = true;
 		tr.className = "hover:bg-slate-50/70 transition";
+
+		tr.addEventListener("dragstart", (e) => handleCourseDragStart(e, index, "saved"));
+		tr.addEventListener("dragover", handleCourseDragOver);
+		tr.addEventListener("dragleave", handleCourseDragLeave);
+		tr.addEventListener("drop", (e) => handleCourseDrop(e, index, "saved"));
+		tr.addEventListener("dragend", handleCourseDragEnd);
 
 		tr.innerHTML = `
 				<td class="py-3 px-4 font-mono font-bold text-indigo-700">
-					${escapeHtml(c.code || "")}
+					<div class="flex items-center gap-2">
+						<span class="text-slate-400 hover:text-indigo-600 cursor-grab active:cursor-grabbing" title="Drag to reorder">
+							<i data-lucide="grip-vertical" class="w-4 h-4"></i>
+						</span>
+						<span>${escapeHtml(c.code || "")}</span>
+					</div>
 				</td>
 				<td class="py-3 px-4 font-semibold text-slate-800">
 					${escapeHtml(c.name || "")}
@@ -2512,6 +2583,7 @@ function renderCoursesTable() {
 					<button
 						onclick="deleteCourse('${escapeHtml(c.code || "")}')"
 						class="text-red-500 hover:text-red-700"
+						title="Delete Course"
 					>
 						<i data-lucide="trash-2" class="w-4 h-4"></i>
 					</button>
@@ -2520,7 +2592,6 @@ function renderCoursesTable() {
 
 		tbody.appendChild(tr);
 	});
-
 	const gpa = totalCredits > 0 ? totalGradePoints / totalCredits : null;
 	const gpaDisplay = document.getElementById("calculatedGpaDisplay");
 
