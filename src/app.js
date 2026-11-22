@@ -94,7 +94,6 @@ function setAuthMode(mode) {
 	const signUpTab = document.getElementById("authTabSignUp");
 	const nameField = document.getElementById("authNameField");
 	const metaFields = document.getElementById("authMetaFields");
-	const adminCheckbox = document.getElementById("authAdminCheckbox");
 
 	if (title) {
 		title.innerText = isSignUp ? "Create Account" : "Sign In";
@@ -123,10 +122,6 @@ function setAuthMode(mode) {
 	if (metaFields) {
 		metaFields.classList.toggle("hidden", !isSignUp);
 	}
-
-	if (adminCheckbox) {
-		adminCheckbox.classList.toggle("hidden", !isSignUp);
-	}
 }
 
 async function handleAuthSubmit(e) {
@@ -153,7 +148,6 @@ async function handleAuthSubmit(e) {
 			const nameInput = document.getElementById("authNameInput");
 			const branchInput = document.getElementById("authBranchInput");
 			const semesterInput = document.getElementById("authSemesterInput");
-			const adminInput = document.getElementById("authIsAdmin");
 
 			const name = nameInput ? nameInput.value.trim() : "";
 			const branch = branchInput ? branchInput.value.trim() : "";
@@ -166,15 +160,13 @@ async function handleAuthSubmit(e) {
 
 			const cred = await auth.createUserWithEmailAndPassword(email, password);
 
-			const isAdmin = adminInput ? adminInput.checked : false;
-
 			const profile = {
 				uid: cred.user.uid,
 				email: email,
 				displayName: name,
 				department: branch,
 				semester: sem,
-				role: isAdmin ? "admin" : "student",
+				role: "student",
 				saturdayRule: null,
 				dailyStudyHours: null,
 				createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -316,28 +308,6 @@ function updateUserDisplayUI() {
 			adminNav.classList.add("hidden");
 		}
 	}
-}
-
-async function toggleUserRole() {
-	const currentRole = appData.userProfile.role || "student";
-
-	const newRole = currentRole === "admin" ? "student" : "admin";
-
-	appData.userProfile.role = newRole;
-
-	if (isFirebaseReady && auth && auth.currentUser) {
-		try {
-			await db.collection("users").doc(auth.currentUser.uid).update({
-				role: newRole,
-			});
-		} catch (e) {
-			console.warn("Could not sync role to Firestore", e);
-		}
-	}
-
-	updateUserDisplayUI();
-
-	showToast(`Role set to: ${newRole.toUpperCase()}`);
 }
 
 /* ================================================================
@@ -741,9 +711,15 @@ function populateProfileView() {
 
 async function saveUserProfile() {
 	const name = document.getElementById("profileNameInput")?.value.trim();
-	const department = document.getElementById("profileDepartmentInput")?.value.trim();
-	const semester = Number(document.getElementById("profileSemesterInput")?.value);
-	const dailyStudyHours = Number(document.getElementById("profileStudyHoursInput")?.value);
+	const department = document
+		.getElementById("profileDepartmentInput")
+		?.value.trim();
+	const semester = Number(
+		document.getElementById("profileSemesterInput")?.value,
+	);
+	const dailyStudyHours = Number(
+		document.getElementById("profileStudyHoursInput")?.value,
+	);
 	const saturdayRule = document.getElementById("profileSaturdayInput")?.value;
 
 	if (
@@ -924,7 +900,9 @@ function refreshDashboard() {
 		metricCollisionCount.innerText = `${collisions.length} Detected`;
 	}
 
-	const metricCollisionSubtext = document.getElementById("metricCollisionSubtext");
+	const metricCollisionSubtext = document.getElementById(
+		"metricCollisionSubtext",
+	);
 	if (metricCollisionSubtext) {
 		metricCollisionSubtext.innerText = hasCollisions
 			? `Due: ${collisions[0].deadline.date}`
@@ -959,7 +937,9 @@ function refreshDashboard() {
 			`;
 		} else {
 			classes.forEach((c) => {
-				const isLab = String(c.type || "").toLowerCase().includes("lab");
+				const isLab = String(c.type || "")
+					.toLowerCase()
+					.includes("lab");
 				const colorBg = isLab
 					? "border-violet-200 bg-violet-50/40"
 					: "border-slate-100 bg-slate-50/70";
@@ -1228,7 +1208,9 @@ function editTaskPrompt(taskId) {
 	if (titleInput) titleInput.value = task.title || "";
 	if (durationInput) durationInput.value = parseHours(task.duration) || 1.5;
 
-	const dateVal = isValidISODate(task.date) ? task.date : new Date().toISOString().slice(0, 10);
+	const dateVal = isValidISODate(task.date)
+		? task.date
+		: new Date().toISOString().slice(0, 10);
 	if (dateInput) dateInput.value = dateVal;
 
 	populateCourseDropdown("taskCourseSelect", task.course);
